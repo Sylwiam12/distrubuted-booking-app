@@ -25,4 +25,4 @@ System będzie podzielony na kilka komponentów:
   - komponent zarządzania filmami do tworzenia seansów
 - komponent dla klientów do rezerwacji miejsc.
 #### Baza danych  
-![database](https://github.com/Sylwiam12/distrubuted-booking-app/assets/81360507/e0404d0a-32cb-40a0-8a9f-191b0a2a0279)
+![database](https://github.com/Sylwiam12/distrubuted-booking-app/assets/81360507/b2b46b7d-ec99-44cb-acc8-bb47fa20d1cf)
