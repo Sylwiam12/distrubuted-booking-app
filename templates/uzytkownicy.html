@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lista użytkowników</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+    }
+    .container {
+        max-width: 800px;
+        margin: 50px auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+        text-align: center;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+    th, td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    .section-title {
+        margin-top: 40px;
+        font-size: 1.2em;
+    }
+    .add-admin-btn,
+    .back-btn {
+        display: block;
+        margin: 20px auto;
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: center;
+    }
+    .add-admin-btn:hover,
+    .back-btn:hover {
+        background-color: #45a049;
+    }
+    .delete-admin-btn {
+        background-color: #f44336;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        padding: 5px 10px;
+    }
+    .delete-admin-btn:hover {
+        background-color: #d32f2f;
+    }
+    /* Pop-up Form Styles */
+    .popup {
+        display: none;
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+    }
+    .popup-content {
+        background: white;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+    .popup-content h2 {
+        margin-top: 0;
+    }
+    .popup-content form input[type="text"],
+    .popup-content form input[type="password"] {
+        width: 100%;
+        padding: 8px;
+        margin: 8px 0;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    .popup-content form input[type="submit"] {
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .popup-content form input[type="submit"]:hover {
+        background-color: #45a049;
+    }
+    .close-btn {
+        background-color: #f44336;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        padding: 5px 10px;
+    }
+    .close-btn:hover {
+        background-color: #d32f2f;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>Użytkownicy</h1>
+
+    <div>
+        <h2 class="section-title">Administratorzy</h2>
+        <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Imię</th>
+                <th>Nazwisko</th>
+                <th>E-mail</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in admins %}
+            <tr>
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ row[3] }}</td>
+                <td>
+                    <button class="delete-admin-btn" onclick="confirmRemoveAdmin({{ row[0] }})">Usuń admina</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+    </div>
+
+    <div>
+        <h2 class="section-title">Użytkownicy</h2>
+        <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Imię</th>
+                <th>Nazwisko</th>
+                <th>E-mail</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in users %}
+            <tr>
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ row[3] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+    </div>
+    
+    <button class="add-admin-btn" onclick="openPopup()">Dodaj Admina</button>
+    <button class="back-btn" onclick="goHome()">Powrót</button>
+
+    <!-- Pop-up Form -->
+    <div class="popup" id="popup">
+        <div class="popup-content">
+            <h2>Dodaj Admina</h2>
+            <form action="/add_admin" method="post">
+                <label for="imie">Imię:</label>
+                <input type="text" id="imie" name="imie" required>
+                <label for="nazwisko">Nazwisko:</label>
+                <input type="text" id="nazwisko" name="nazwisko" required>
+                <label for="mail">E-mail:</label>
+                <input type="text" id="mail" name="mail" required>
+                <label for="haslo">Hasło:</label>
+                <input type="password" id="haslo" name="haslo" required>
+                <input type="hidden" name="czy_admin" value=1>
+                <input type="submit" value="Dodaj">
+                <button type="button" class="close-btn" onclick="closePopup()">Zamknij</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirmation Popup for Remove Admin -->
+    <div class="popup" id="confirmPopup">
+        <div class="popup-content">
+            <h2>Jesteś pewny, że chcesz usunąć tego admina?</h2>
+            <form id="removeAdminForm" action="/remove_admin" method="post">
+                <input type="hidden" id="removeAdminId" name="id_klienta">
+                <input type="submit" value="Tak">
+                <button type="button" class="close-btn" onclick="closeConfirmPopup()">Nie</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openPopup() {
+        document.getElementById("popup").style.display = "flex";
+    }
+
+    function closePopup() {
+        document.getElementById("popup").style.display = "none";
+    }
+
+    function confirmRemoveAdmin(id) {
+        document.getElementById("removeAdminId").value = id;
+        document.getElementById("confirmPopup").style.display = "flex";
+    }
+
+    function closeConfirmPopup() {
+        document.getElementById("confirmPopup").style.display = "none";
+    }
+
+    function goHome() {
+        window.location.href = "/";
+    }
+</script>
+</body>
+</html>

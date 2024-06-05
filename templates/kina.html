@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lista kin i sal</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+    }
+    .container {
+        max-width: 800px;
+        margin: 50px auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+        text-align: center;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    .arrow {
+        cursor: pointer;
+        text-align: center;
+    }
+    .sala-details {
+        display: none;
+    }
+    .button-container {
+        text-align: right;
+    }
+    .actions-header {
+        text-align: right;
+    }
+    .calendar {
+        display: none;
+        margin-top: 10px;
+    }
+    .times {
+        display: none;
+        margin-top: 10px;
+    }
+</style>
+<script>
+    function toggleSalaDetails(kinoId) {
+        const detailsRow = document.getElementById(`details-${kinoId}`);
+        if (detailsRow.style.display === 'none') {
+            fetch(`/get_sala/${kinoId}`)
+                .then(response => response.json())
+                .then(data => {
+                    let detailsHtml = '<tr><th>ID Sali</th><th>Nazwa Sali</th><th>Ilość Miejsc</th><th class="actions-header">Akcje</th></tr>';
+                    data.forEach(sala => {
+                        detailsHtml += `
+                            <tr>
+                                <td>${sala[0]}</td>
+                                <td>${sala[1]}</td>
+                                <td>${sala[2]}</td>
+                                <td class="button-container">
+                                    <button onclick="checkAvailability(${sala[0]})">Sprawdz dostępność</button>
+                                    <div id="calendar-${sala[0]}" class="calendar">
+                                        <input type="date" onchange="showTimes(${sala[0]}, this.value)">
+                                    </div>
+                                    <div id="times-${sala[0]}" class="times"></div>
+                                </td>
+                            </tr>`;
+                    });
+                    document.getElementById(`details-content-${kinoId}`).innerHTML = detailsHtml;
+                    detailsRow.style.display = 'table-row';
+                });
+        } else {
+            detailsRow.style.display = 'none';
+        }
+    }
+
+    function checkAvailability(salaId) {
+        const calendar = document.getElementById(`calendar-${salaId}`);
+        const timesDiv = document.getElementById(`times-${salaId}`);
+        if (calendar.style.display === 'none') {
+            calendar.style.display = 'block';
+            timesDiv.style.display = 'none';
+        } else {
+            calendar.style.display = 'none';
+            timesDiv.style.display = 'none';
+        }
+    }
+
+    function showTimes(salaId, date) {
+        fetch(`/get_availability/${salaId}/${date}`)
+            .then(response => response.json())
+            .then(data => {
+                let timesHtml = 'Dostępne godziny:<ul>';
+                data.forEach(time => {
+                    timesHtml += `<li>${time}</li>`;
+                });
+                timesHtml += '</ul>';
+                const timesDiv = document.getElementById(`times-${salaId}`);
+                timesDiv.innerHTML = timesHtml;
+                timesDiv.style.display = 'block';
+            });
+    }
+
+    function navigate(route) {
+        window.location.href = route;
+    }
+</script>
+</head>
+<body>
+<div class="container">
+    <h1>Lista kin i sal</h1>
+    <table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nazwa</th>
+            <th>Adres</th>
+            <th>Details</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in data %}
+        <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td class="arrow" onclick="toggleSalaDetails({{ row[0] }})">&#x25BC;</td>
+        </tr>
+        <tr id="details-{{ row[0] }}" class="sala-details">
+            <td colspan="4">
+                <table id="details-content-{{ row[0] }}">
+                </table>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+</div>
+</body>
+</html>

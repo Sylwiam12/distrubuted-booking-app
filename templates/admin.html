@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+    }
+    .container {
+        max-width: 800px;
+        margin: 50px auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+        text-align: center;
+    }
+    .dropdown {
+        display: inline-block;
+    }
+    .dropdown-select {
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        background-color: #fff;
+        cursor: pointer;
+    }
+    .dropdown-options {
+        display: none;
+        position: absolute;
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        margin-top: 5px;
+        padding: 5px 0;
+        min-width: 150px;
+        z-index: 1;
+    }
+    .dropdown-option {
+        padding: 10px;
+        cursor: pointer;
+    }
+    .dropdown-option:hover {
+        background-color: #f0f0f0;
+    }
+</style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Hej Admin!</h1>
+        <div class="dropdown">
+            <div class="dropdown-select" onclick="toggleDropdown()">co chcesz zrobić?</div>
+            <div class="dropdown-options" id="dropdownOptions">
+                <div class="dropdown-option" onclick="navigate('/movie')">Zarządzaj filmami</div>
+                <div class="dropdown-option" onclick="navigate('/seans')">Zarządzaj seansami</div>
+                <div class="dropdown-option" onclick="navigate('/uzytkownicy')">Zarządzaj uprawnieniami</div>
+                <div class="dropdown-option" onclick="navigate('/kina')">Zarządzaj kinami</div>
+                <!-- <div class="dropdown-option" onclick="navigate('/add_movie')">Dodaj film</div>
+                <div class="dropdown-option" onclick="navigate('/remove_movie')">Usuń film</div>
+                <div class="dropdown-option" onclick="navigate('/update_movie')">Edytuj film</div>
+                <div class="dropdown-option" onclick="navigate('/add_seans')">Dodaj seans</div>
+                <div class="dropdown-option" onclick="navigate('/remove_seans')">Usuń seans</div>
+                <div class="dropdown-option" onclick="navigate('/update_seans')">Edytuj seans</div> -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function toggleDropdown() {
+            var dropdownOptions = document.getElementById("dropdownOptions");
+            if (dropdownOptions.style.display === "none") {
+                dropdownOptions.style.display = "block";
+            } else {
+                dropdownOptions.style.display = "none";
+            }
+        }
+    
+        function navigate(route) {
+            window.location.href = route;
+        }
+    </script>
+    
+    </body>
+    </html>
