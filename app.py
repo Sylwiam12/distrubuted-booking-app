@@ -599,6 +599,38 @@ def catalog():
         films.append(film)
     
     return render_template('catalog.html', films=films)
-        
+
+@app.route('/book/')
+def book_filmy():
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor()
+    cur.execute('''SELECT id_filmu, tytul, rezyser, gatunek, jezyk, napisy, rok_wydania, czas_trwania FROM film''')
+    data = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    films = []
+    for row in data:
+        film = {
+            'id_filmu': row[0],
+            'tytul': row[1],
+            'rezyser': row[2],
+            'gatunek': row[3],
+            'jezyk': row[4],
+            'napisy': row[5],
+            'rok_wydania': row[6],
+            'czas_trwania': row[7]
+        }
+        films.append(film)
+    
+    return render_template('book_filmy.html', films=films)
+
+@app.route('/book/cinema', methods=['POST'])
+def pick_cinema():
+    id_filmu = request.form['id_filmu']
+    # Save the id_filmu in session or pass it to the next page as needed
+    # For now, we just pass it to the render template
+    return render_template('book_cinema.html', id_filmu=id_filmu)
+
 if __name__ == '__main__': 
     app.run(debug=True) 
