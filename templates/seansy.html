@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lista filmów</title>
+<title>Lista Seansów</title>
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -35,21 +35,47 @@
         background-color: #f2f2f2;
     }
     .button-container {
-        margin-top: 20px;
         text-align: center;
+        margin-bottom: 20px;
     }
-    .button-container button {
+    .button {
+        background-color: #4CAF50;
+        color: white;
         padding: 10px 20px;
-        margin: 0 10px;
         border: none;
-        border-radius: 5px;
         cursor: pointer;
+        border-radius: 5px;
     }
-    .button-container button:hover {
-        background-color: #f0f0f0;
-    }
-    .add-movie-form, .update-movie-form {
+    .modal {
         display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgb(0,0,0);
+        background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+    }
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+    .close:hover, .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
     }
     .delete-icon {
         display: none;
@@ -59,93 +85,156 @@
 </head>
 <body> 
 <div class="container">
-	<h1>Lista seansów</h1> 
-	<table> 
-	<thead> 
-		<tr> 
-		<th>ID</th> 
-		<th>tytul</th> 
-		<th>reżyser</th> 
-		<th>gatunek</th> 
-		<th>język</th> 
-        <th>napisy</th>
-        <th>rok wydania</th>  
-        <th>czas trwania</th> 
-		</tr> 
-	</thead> 
-
-	<tbody> 
-		{% for row in data %} 
-		<tr> 
-		<td>{{ row[0] }}</td> 
-		<td>{{ row[1] }}</td> 
-		<td>{{ row[2] }}</td> 
-		<td>{{ row[3] }}</td>
-		<td>{{ row[4] }}</td>
-		<td>{{ row[5] }}</td>
-		<td>{{ row[6] }}</td>
-		<td>{{ row[7] }}</td> 
-        <td class="delete-icon">
-            <form action="/delete_movie" method="post" class="delete-form" style="display: none;">
-                <input type="hidden" name="id_movie" value="{{ row[0] }}"> 
-                <button type="submit">❌</button>
-            </form>
-        </td>
-        <td class="update-movie-form" style="display: none;">
-            <form action="/update_movie" method="post"> 
-                <input type="hidden" name="id" value="{{ row[0] }}"> 
-                <input type="text" name="tytul" value="{{ row[1] }}"> 
-                <input type="text" name="rezyser" value="{{ row[2] }}"> 
-                <input type="text" name="gatunek" value="{{ row[3] }}"> 
-                <input type="text" name="jezyk" value="{{ row[4] }}"> 
-                <input type="text" name="napisy" value="{{ row[5] }}"> 
-                <input type="text" name="rok" value="{{ row[6] }}"> 
-                <input type="text" name="czas" value="{{ row[7] }}">  
-                <input type="submit" value="Aktualizuj"> 
-            </form> 
-        </td>
-		</tr> 
-		{% endfor %} 
-	</tbody> 
-	</table> 
+    <h1>Lista Seansów</h1>
     <div class="button-container">
-        <button onclick="goBack()">Powrót</button>
-        <button onclick="toggleForm()">Dodaj film</button>
-        <button onclick="toggleUpdateForms()">Edytuj Film</button>
-        <button onclick="toggleDeleteIcon()">Usuń film</button>
+        <button class="button" id="addSeansBtn">Dodaj Seans</button>
+        <button onclick="toggleDeleteIcon()">Usuń seans</button>
     </div>
-    <div class="add-movie-form">
-        <h2>Dodaj film</h2> 
-        <form action="/add_movie" method="post"> 
-            <input type="text" name="tytul" placeholder="tytul"> 
-            <input type="text" name="gatunek" placeholder="gatunek"> 
-            <input type="text" name="rezyser" placeholder="rezyser"> 
-            <input type="text" name="jezyk" placeholder="jezyk">
-            <input type="hidden" name="napisy" value="false">
-            <input type="checkbox" name="napisy" id="napisyCheckbox" onclick="toggleNapisy()">
-            <label for="napisyCheckbox">Napisy</label>
-            <input type="text" name="rok" placeholder="rok">
-            <input type="text" name="czas" placeholder="czas">
-            <input type="submit" value="Create"> 
-        </form> 
+    <table> 
+        <thead> 
+            <tr> 
+                <th>ID Seansu</th> 
+                <th>Sala</th> 
+                <th>Kino</th> 
+                <th>Film</th> 
+                <th>Data</th> 
+                <th>Godzina</th> 
+            </tr> 
+        </thead> 
+        <tbody> 
+            {% for row in data %} 
+            <tr> 
+                <td>{{ row[0] }}</td> 
+                <td>{{ row[1] }}</td> 
+                <td>{{ row[2] }}</td> 
+                <td>{{ row[3] }}</td> 
+                <td>{{ row[4] }}</td>
+                <td>{{ row[5] }}</td>
+                <td class="delete-icon">
+                    <form action="/delete_seans" method="post" class="delete-form" style="display: none;">
+                        <input type="hidden" name="id_seansu" value="{{ row[0] }}">
+                        <button type="submit">❌</button>
+                    </form>
+                </td>
+            </tr> 
+            {% endfor %} 
+        </tbody> 
+    </table>
+</div>
+
+<div id="addSeansModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Dodaj Seans</h2>
+        <form id="addSeansForm" method="post" action="/dodaj_seans">
+            <label for="film">Film:</label>
+            <select name="film" id="film"></select>
+            <br>
+            <label for="kino">Kino:</label>
+            <select name="kino" id="kino"></select>
+            <br>
+            <label for="sala">Sala:</label>
+            <select name="sala" id="sala"></select>
+            <br>
+            <label for="data">Data:</label>
+            <input type="date" name="data" id="data">
+            <br>
+            <label for="godzina">Godzina:</label>
+            <select name="godzina" id="godzina"></select>
+            <br>
+            <button type="submit">Dodaj</button>
+        </form>
     </div>
 </div>
 
 <script>
-    function toggleForm() {
-        var form = document.querySelector('.add-movie-form');
-        form.style.display = (form.style.display === 'none') ? 'block' : 'none';
+    document.getElementById('addSeansBtn').onclick = function() {
+        document.getElementById('addSeansModal').style.display = 'block';
+        loadDropdowns();
     }
 
-    function toggleNapisy() {
-        var napisyInput = document.querySelector('input[name="napisy"]');
-        if (document.getElementById('napisyCheckbox').checked) {
-            napisyInput.value = "true";
-        } else {
-            napisyInput.value = "false";
+    document.getElementsByClassName('close')[0].onclick = function() {
+        document.getElementById('addSeansModal').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        if (event.target == document.getElementById('addSeansModal')) {
+            document.getElementById('addSeansModal').style.display = 'none';
         }
     }
 
+    function loadDropdowns() {
+        fetch('/available_movies')
+        .then(response => response.json())
+        .then(data => {
+            const filmSelect = document.getElementById('film');
+            filmSelect.innerHTML = '';
+            data.forEach(film => {
+                const option = document.createElement('option');
+                option.value = film.id;
+                option.textContent = film.title;
+                option.dataset.duration = film.duration;
+                filmSelect.appendChild(option);
+            });
+        });
+
+        fetch('/available_cinemas')
+        .then(response => response.json())
+        .then(data => {
+            const kinoSelect = document.getElementById('kino');
+            kinoSelect.innerHTML = '';
+            data.forEach(kino => {
+                const option = document.createElement('option');
+                option.value = kino.id;
+                option.textContent = kino.name;
+                kinoSelect.appendChild(option);
+            });
+        });
+    }
+
+    document.getElementById('kino').onchange = function() {
+        const kinoId = this.value;
+        fetch(`/available_halls?kino_id=${kinoId}`)
+        .then(response => response.json())
+        .then(data => {
+            const salaSelect = document.getElementById('sala');
+            salaSelect.innerHTML = '';
+            data.forEach(sala => {
+                const option = document.createElement('option');
+                option.value = sala.id;
+                option.textContent = sala.name;
+                salaSelect.appendChild(option);
+            });
+        });
+    }
+
+    document.getElementById('data').onchange = function() {
+        updateAvailableTimes();
+    }
+
+    document.getElementById('sala').onchange = function() {
+        updateAvailableTimes();
+    }
+
+    function updateAvailableTimes() {
+        const salaId = document.getElementById('sala').value;
+        const date = document.getElementById('data').value;
+        const filmId = document.getElementById('film').value;
+        if (salaId && date && filmId) {
+            fetch(`/available_times?sala_id=${salaId}&date=${date}&film_id=${filmId}`)
+            .then(response => response.json())
+            .then(data => {
+                const godzinaSelect = document.getElementById('godzina');
+                godzinaSelect.innerHTML = '';
+                data.forEach(time => {
+                    const option = document.createElement('option');
+                    option.value = time;
+                    option.textContent = time;
+                    godzinaSelect.appendChild(option);
+                });
+            });
+        }
+    }
     function toggleDeleteIcon() {
         var deleteForms = document.querySelectorAll('.delete-form');
         for (var i = 0; i < deleteForms.length; i++) {
@@ -157,22 +246,6 @@
             deleteIcons[i].style.display = 'inline-block';
         }
     }
-
-    function toggleUpdateForms() {
-        var updateForms = document.querySelectorAll('.update-movie-form');
-        for (var i = 0; i < updateForms.length; i++) {
-            updateForms[i].style.display = 'block';
-        }
-    }
-
-    function goBack() {
-        window.location.href = '/';  
-    }
-
-    function navigate(route) {
-        window.location.href = route;
-    }
 </script>
-
 </body> 
 </html>
