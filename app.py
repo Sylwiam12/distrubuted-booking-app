@@ -364,6 +364,63 @@ def dodaj_seans():
     
     return redirect(url_for('seanse'))
 
+@app.route('/delete_seans', methods=['POST'])
+def delete_seans():
+    id_seansu = request.form['id_seansu']
+    
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor()
+    
+    # Retrieve information about the seans to be deleted
+    cur.execute('''
+        SELECT id_filmu, id_sali, data_seansu, godzina
+        FROM seans
+        WHERE id_seansu = %s
+    ''', (id_seansu,))
+    seans_info = cur.fetchone()
+    if seans_info:
+        film_id, sala_id, date, time = seans_info
+
+        # Convert time to string if it is a datetime object
+        if isinstance(time, datetime.timedelta):
+            total_seconds = int(time.total_seconds())
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
+            time = f"{hours:02}:{minutes:02}"
+        elif isinstance(time, datetime.time):
+            time = time.strftime("%H:%M")
+
+        # Delete the seans
+        cur.execute('DELETE FROM seans WHERE id_seansu = %s', (id_seansu,))
+        
+        # Get the movie duration
+        cur.execute('SELECT czas_trwania FROM film WHERE id_filmu = %s', (film_id,))
+        duration = cur.fetchone()[0]
+        duration_in_minutes = duration  # assuming czas_trwania is in minutes
+
+        # Calculate time slots to be re-added to dostepnosc_sali
+        start_hour, start_minute = map(int, time.split(':'))
+        interval = 15  # minutes
+
+        times_to_add = [
+            f"{(start_hour + (start_minute + i) // 60):02}:{(start_minute + i) % 60:02}"
+            for i in range(0, duration_in_minutes, interval)
+        ]
+
+        for add_time in times_to_add:
+            cur.execute('''
+                INSERT INTO dostepnosc_sali (id_sali, dzien, dostepna_godzina)
+                VALUES (%s, %s, %s)
+            ''', (sala_id, date, add_time))
+        
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return redirect(url_for('seanse'))
+
+
+
 @app.route('/register/', methods=['GET', 'POST'])
 def register():
     form = SignupForm(request.form)

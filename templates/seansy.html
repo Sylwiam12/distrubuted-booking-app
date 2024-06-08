@@ -77,6 +77,10 @@
         text-decoration: none;
         cursor: pointer;
     }
+    .delete-icon {
+        display: none;
+        cursor: pointer;
+    }
 </style>
 </head>
 <body> 
@@ -84,6 +88,7 @@
     <h1>Lista Seansów</h1>
     <div class="button-container">
         <button class="button" id="addSeansBtn">Dodaj Seans</button>
+        <button onclick="toggleDeleteIcon()">Usuń seans</button>
     </div>
     <table> 
         <thead> 
@@ -105,6 +110,12 @@
                 <td>{{ row[3] }}</td> 
                 <td>{{ row[4] }}</td>
                 <td>{{ row[5] }}</td>
+                <td class="delete-icon">
+                    <form action="/delete_seans" method="post" class="delete-form" style="display: none;">
+                        <input type="hidden" name="id_seansu" value="{{ row[0] }}">
+                        <button type="submit">❌</button>
+                    </form>
+                </td>
             </tr> 
             {% endfor %} 
         </tbody> 
@@ -222,6 +233,17 @@
                     godzinaSelect.appendChild(option);
                 });
             });
+        }
+    }
+    function toggleDeleteIcon() {
+        var deleteForms = document.querySelectorAll('.delete-form');
+        for (var i = 0; i < deleteForms.length; i++) {
+            deleteForms[i].style.display = 'block';
+        }
+
+        var deleteIcons = document.querySelectorAll('.delete-icon');
+        for (var i = 0; i < deleteIcons.length; i++) {
+            deleteIcons[i].style.display = 'inline-block';
         }
     }
 </script>
