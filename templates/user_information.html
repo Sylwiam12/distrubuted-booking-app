@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="container mt-5">
+    <a href="/" class="btn btn-light" style="position: absolute; top: 0; left: 0;">
+        <i class="fas fa-home"></i>
+    </a>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card border-primary h-100">
+                <div class="card-header bg-primary text-white" style="background-color: #baead1;">
+                    User Information
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> {{ user.imie }} {{ user.nazwisko }}</p>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-primary h-100">
+                <div class="card-header bg-primary text-white " style="background-color: #baead1;">
+                    My Reservations
+                </div>
+                <div class="card-body">
+                    <div class="reservations">
+                        {% if reservations %}
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Reservation ID</th>
+                                        <th>Status</th>
+                                        <th>Reservation Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for reservation in reservations %}
+                                        <tr>
+                                            <td>{{ reservation.id_rezerwacji }}</td>
+                                            <td>Waiting</td>
+                                            <td>{{ reservation.data_seansu }} {{ reservation.godzina }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p>No reservations found.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

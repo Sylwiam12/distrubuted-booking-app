@@ -245,6 +245,7 @@ def login():
         if user_db:
             if check_password_hash(user_db['haslo'], password_login):
                 session['logged'] = True
+                session['user_id'] = user_db['id_uzytkownika']
                 if user_db['czy_admin'] == 1:  
                     session['admin'] = True
                 else:
@@ -285,7 +286,56 @@ def contact():
         flash('Your message has been sent successfully!', 'success')
     return render_template('contact.html', form=SendEmail())
 
+@app.route('/user_information')
+def user_information():
+    user_id = session['user_id']
 
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor(dictionary=True)
+    cur.execute('SELECT * FROM uzytkownik WHERE id_uzytkownika = %s', (user_id,))
+    user_db = cur.fetchone()
+
+    cur.execute('''
+        SELECT r.id_rezerwacji, r.id_seansu, r.ilosc_miejsc, 
+               s.id_sali, s.id_filmu, s.data_seansu, s.godzina
+        FROM rezerwacja r
+        JOIN seans s ON r.id_seansu = s.id_seansu
+        WHERE r.id_uzytkownika = %s
+    ''', (user_id,))
+    reservations = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    if user_db:
+        return render_template('user_information.html', user=user_db, reservations=reservations)
+    else:
+        return "User not found", 404
+
+@app.route('/catalog/')
+def catalog():
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor()
+    cur.execute('''SELECT id_filmu, tytul, rezyser, gatunek, jezyk, napisy, rok_wydania, czas_trwania FROM film''')
+    data = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    films = []
+    for row in data:
+        film = {
+            'id_filmu': row[0],
+            'tytul': row[1],
+            'rezyser': row[2],
+            'gatunek': row[3],
+            'jezyk': row[4],
+            'napisy': row[5],
+            'rok_wydania': row[6],
+            'czas_trwania': row[7]
+        }
+        films.append(film)
+    
+    return render_template('catalog.html', films=films)
         
 if __name__ == '__main__': 
     app.run(debug=True) 

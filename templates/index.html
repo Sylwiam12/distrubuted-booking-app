@@ -11,8 +11,9 @@
                 {% if session.logged and session.user %}
                     <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
                     <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/buy">Buy Ticket</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/book">Buy Ticket</a></li>
                     <li class="nav-item"><a class="nav-link" href="/user_information">Account Information</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/catalog">Movies</a></li>
                 {% elif session.logged and session.admin %}
                     <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
                     <li class="nav-item"><a class="nav-link" href="/admin">Manage</a></li>
@@ -20,6 +21,7 @@
                     <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
                     <li class="nav-item"><a class="nav-link" href="/register">Sign up</a></li>
                     <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/catalog">Movies</a></li>
                 {% endif %}
             </ul>
         </div>
