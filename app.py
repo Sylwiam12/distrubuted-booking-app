@@ -146,31 +146,55 @@ def add_availability():
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor()
     
-    times = ['10:00', '10:15', '10:30', '10:45', '11:00', '11:15', '11:30', '11:45', '12:00', '12:15', '12:30', '12:45', '13:00', '13:15', '13:30', '13:45', '14:00', '14:15', '14:30', '14:45', '15:00', '15:15', '15:30', '15:45', '16:00', '16:15', '16:30', '16:45', '17:00', '17:15', '17:30', '17:45', '18:00', '18:15', '18:30', '18:45', '19:00', '19:15', '19:30', '19:45', '20:00', '20:15', '20:30', '20:45', '21:00']
+    times = [
+        '10:00', '10:15', '10:30', '10:45', '11:00', '11:15', '11:30', '11:45',
+        '12:00', '12:15', '12:30', '12:45', '13:00', '13:15', '13:30', '13:45',
+        '14:00', '14:15', '14:30', '14:45', '15:00', '15:15', '15:30', '15:45',
+        '16:00', '16:15', '16:30', '16:45', '17:00', '17:15', '17:30', '17:45',
+        '18:00', '18:15', '18:30', '18:45', '19:00', '19:15', '19:30', '19:45',
+        '20:00', '20:15', '20:30', '20:45', '21:00'
+    ]
     
     success = True
     messages = 0
     try:
         for time in times:
-            cur.execute('SELECT COUNT(*) FROM dostepnosc_sali WHERE dzien = %s AND dostepna_godzina = %s AND id_sali = %s', (date, time, sala_id))
-            count = cur.fetchone()[0]
+            # Check if the time is already in zajete_godziny
+            cur.execute('''
+                SELECT COUNT(*)
+                FROM zajete_godziny zg
+                JOIN seans s ON zg.id_seansu = s.id_seansu
+                WHERE zg.godzina = %s AND s.id_sali = %s AND s.data_seansu = %s
+            ''', (time, sala_id, date))
+            occupied_count = cur.fetchone()[0]
             
-            if count == 0:
-                cur.execute('INSERT INTO dostepnosc_sali (dzien, dostepna_godzina, id_sali) VALUES (%s, %s, %s)', (date, time, sala_id))
-                messages += 1
-            # else:
-            #     messages.append(f'Availability for {time} already exists.')
+            if occupied_count == 0:
+                # Check if the time is already in dostepnosc_sali
+                cur.execute('''
+                    SELECT COUNT(*)
+                    FROM dostepnosc_sali
+                    WHERE dzien = %s AND dostepna_godzina = %s AND id_sali = %s
+                ''', (date, time, sala_id))
+                available_count = cur.fetchone()[0]
+                
+                if available_count == 0:
+                    cur.execute('''
+                        INSERT INTO dostepnosc_sali (dzien, dostepna_godzina, id_sali)
+                        VALUES (%s, %s, %s)
+                    ''', (date, time, sala_id))
+                    messages += 1
         
         conn.commit()
     except Exception as e:
         conn.rollback()
         success = False
-        messages.append(f'Error occurred: {str(e)}')
+        messages = f'Error occurred: {str(e)}'
     finally:
         cur.close()
         conn.close()
     
     return jsonify({'success': success, 'messages': messages})
+
 
 @app.route('/uzytkownicy')
 def users():
@@ -341,6 +365,8 @@ def dodaj_seans():
         VALUES (%s, %s, %s, %s)
         ''', (film_id, sala_id, date, time))
     
+    seans_id = cur.lastrowid
+    
     # Get the movie duration
     cur.execute('SELECT czas_trwania FROM film WHERE id_filmu = %s', (film_id,))
     duration = cur.fetchone()[0]
@@ -357,7 +383,7 @@ def dodaj_seans():
     
     for del_time in times_to_delete:
         cur.execute('DELETE FROM dostepnosc_sali WHERE id_sali = %s AND dzien = %s AND dostepna_godzina = %s', (sala_id, date, del_time))
-
+        cur.execute('INSERT INTO zajete_godziny (godzina, id_seansu) VALUES (%s, %s)', (del_time, seans_id))
     conn.commit()
     cur.close()
     conn.close()
@@ -412,6 +438,7 @@ def delete_seans():
                 INSERT INTO dostepnosc_sali (id_sali, dzien, dostepna_godzina)
                 VALUES (%s, %s, %s)
             ''', (sala_id, date, add_time))
+            cur.execute('DELETE FROM zajete_godziny WHERE id_seansu = %s AND godzina = %s', (id_seansu, add_time))
         
     conn.commit()
     cur.close()
