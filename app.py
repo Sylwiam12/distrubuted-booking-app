@@ -6,6 +6,7 @@ from flask_mail import Mail, Message
 import mysql.connector
 import bcrypt
 from config import host, database, user, password
+import datetime
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
@@ -126,24 +127,61 @@ def get_availability(sala_id, date):
     available_times = [str(time[0]) for time in data]
     return jsonify(available_times)
 
+@app.route('/get_cinemas')
+def get_cinemas():
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor()
+    cur.execute('SELECT id_kina, nazwa FROM kino')
+    data = cur.fetchall()
+    cur.close()
+    conn.close()
+    return jsonify(data)
+
+@app.route('/add_availability', methods=['POST'])
+def add_availability():
+    req_data = request.get_json()
+    sala_id = req_data['salaId']
+    date = req_data['date']
+    
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor()
+    
+    times = ['10:00', '10:15', '10:30', '10:45', '11:00', '11:15', '11:30', '11:45', '12:00', '12:15', '12:30', '12:45', '13:00', '13:15', '13:30', '13:45', '14:00', '14:15', '14:30', '14:45', '15:00', '15:15', '15:30', '15:45', '16:00', '16:15', '16:30', '16:45', '17:00', '17:15', '17:30', '17:45', '18:00', '18:15', '18:30', '18:45', '19:00', '19:15', '19:30', '19:45', '20:00', '20:15', '20:30', '20:45', '21:00']
+    
+    success = True
+    messages = 0
+    try:
+        for time in times:
+            cur.execute('SELECT COUNT(*) FROM dostepnosc_sali WHERE dzien = %s AND dostepna_godzina = %s AND id_sali = %s', (date, time, sala_id))
+            count = cur.fetchone()[0]
+            
+            if count == 0:
+                cur.execute('INSERT INTO dostepnosc_sali (dzien, dostepna_godzina, id_sali) VALUES (%s, %s, %s)', (date, time, sala_id))
+                messages += 1
+            # else:
+            #     messages.append(f'Availability for {time} already exists.')
+        
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        success = False
+        messages.append(f'Error occurred: {str(e)}')
+    finally:
+        cur.close()
+        conn.close()
+    
+    return jsonify({'success': success, 'messages': messages})
 
 @app.route('/uzytkownicy')
 def users():
-    # Connect to the database 
-    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
-  
-    # create a cursor 
-    cur = conn.cursor() 
-  
-    # Select all admins from the table 
+
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password) 
+    cur = conn.cursor()  
     cur.execute('''SELECT id_uzytkownika, imie, nazwisko, mail FROM uzytkownik WHERE czy_admin = 1''') 
     admins = cur.fetchall()
-  
-    # Select all non-admin users from the table 
     cur.execute('''SELECT id_uzytkownika, imie, nazwisko, mail FROM uzytkownik WHERE czy_admin = 0''') 
     users = cur.fetchall()
   
-    # close the cursor and connection 
     cur.close() 
     conn.close() 
   
@@ -184,6 +222,147 @@ def remove_admin():
     conn.close()
     
     return redirect(url_for('users'))
+
+@app.route('/seanse')
+def seanse():
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor()
+    
+    cur.execute('''
+        SELECT seans.id_seansu, sala.nazwa, kino.nazwa, film.tytul, seans.data_seansu, seans.godzina
+        FROM seans
+        JOIN sala ON seans.id_sali = sala.id_sali
+        JOIN kino ON sala.id_kina = kino.id_kina
+        JOIN film ON seans.id_filmu = film.id_filmu
+        ''') 
+    
+    data = cur.fetchall() 
+    
+    cur.close()
+    conn.close()
+    
+    return render_template('seansy.html', data=data)
+
+@app.route('/available_movies')
+def available_movies():
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor()
+    
+    cur.execute('SELECT id_filmu, tytul, czas_trwania FROM film')
+    movies = [{'id': row[0], 'title': row[1], 'duration': row[2]} for row in cur.fetchall()]
+    
+    cur.close()
+    conn.close()
+    
+    return jsonify(movies)
+
+@app.route('/available_cinemas')
+def available_cinemas():
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor()
+    
+    cur.execute('SELECT id_kina, nazwa FROM kino')
+    cinemas = [{'id': row[0], 'name': row[1]} for row in cur.fetchall()]
+    
+    cur.close()
+    conn.close()
+    
+    return jsonify(cinemas)
+
+@app.route('/available_halls')
+def available_halls():
+    kino_id = request.args.get('kino_id')
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor()
+    
+    cur.execute('SELECT id_sali, nazwa FROM sala WHERE id_kina = %s', (kino_id,))
+    halls = [{'id': row[0], 'name': row[1]} for row in cur.fetchall()]
+    
+    cur.close()
+    conn.close()
+    
+    return jsonify(halls)
+
+@app.route('/available_times')
+def available_times():
+    sala_id = request.args.get('sala_id')
+    date = request.args.get('date')
+    film_id = request.args.get('film_id')
+    
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor()
+    
+    # Get the movie duration
+    cur.execute('SELECT czas_trwania FROM film WHERE id_filmu = %s', (film_id,))
+    duration = cur.fetchone()[0]
+    
+    # Fetch available times as formatted strings
+    cur.execute('''
+        SELECT TIME_FORMAT(dostepna_godzina, '%H:%i')
+        FROM dostepnosc_sali
+        WHERE id_sali = %s AND dzien = %s
+        ORDER BY dostepna_godzina
+        ''', (sala_id, date))
+    available_times = [row[0] for row in cur.fetchall()]
+
+    available_start_times = []
+    interval = 15  # minutes
+    duration_in_minutes = duration  # assuming czas_trwania is in minutes
+
+    for start_time in available_times:
+        start_hour, start_minute = map(int, start_time.split(':'))
+        start_datetime = datetime.datetime.strptime(start_time, '%H:%M')
+        end_datetime = start_datetime + datetime.timedelta(minutes=duration_in_minutes)
+        end_time_str = end_datetime.strftime('%H:%M')
+        
+        if all(
+            (start_datetime + datetime.timedelta(minutes=i)).strftime('%H:%M') in available_times
+            for i in range(0, duration_in_minutes, interval)
+        ):
+            available_start_times.append(start_time)
+
+    cur.close()
+    conn.close()
+    
+    return jsonify(available_start_times)
+
+@app.route('/dodaj_seans', methods=['POST'])
+def dodaj_seans():
+    film_id = request.form['film']
+    sala_id = request.form['sala']
+    date = request.form['data']
+    time = request.form['godzina']
+    
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor()
+    
+    cur.execute('''
+        INSERT INTO seans (id_filmu, id_sali, data_seansu, godzina)
+        VALUES (%s, %s, %s, %s)
+        ''', (film_id, sala_id, date, time))
+    
+    # Get the movie duration
+    cur.execute('SELECT czas_trwania FROM film WHERE id_filmu = %s', (film_id,))
+    duration = cur.fetchone()[0]
+    duration_in_minutes = duration  # assuming czas_trwania is in minutes
+
+    # Calculate time slots to be deleted
+    start_hour, start_minute = map(int, time.split(':'))
+    interval = 15  # minutes
+
+    times_to_delete = [
+        f"{(start_hour + (start_minute + i) // 60):02}:{(start_minute + i) % 60:02}"
+        for i in range(0, duration_in_minutes, interval)
+    ]
+    
+    for del_time in times_to_delete:
+        cur.execute('DELETE FROM dostepnosc_sali WHERE id_sali = %s AND dzien = %s AND dostepna_godzina = %s', (sala_id, date, del_time))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return redirect(url_for('seanse'))
 
 @app.route('/register/', methods=['GET', 'POST'])
 def register():
