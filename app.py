@@ -665,7 +665,24 @@ def pick_time():
     id_kina = request.form['id_kina']
     date = request.form['date']
 
-    return render_template('book_time.html', id_filmu=id_filmu, id_kina=id_kina, date=date)
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor()
+
+    query = "SELECT DISTINCT godzina FROM seans WHERE id_filmu = %s AND id_sali IN (SELECT id_sali FROM sala WHERE id_kina = %s) AND data_seansu = %s ORDER BY godzina"
+    cur.execute(query, (id_filmu, id_kina, date))
+    rows = cur.fetchall()
+    available_times = [row[0] for row in rows]
+
+    return render_template('book_time.html', id_filmu=id_filmu, id_kina=id_kina, date=date, available_times=available_times)
+
+@app.route('/book/seats', methods=['POST'])
+def pick_seat():
+    id_filmu = request.form['id_filmu']
+    id_kina = request.form['id_kina']
+    date = request.form['date']
+    time = request.form['time']
+
+    return render_template('book_seats.html', id_filmu=id_filmu, id_kina=id_kina, date=date, time=time)
 
 if __name__ == '__main__': 
     app.run(debug=True) 
