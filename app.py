@@ -657,6 +657,9 @@ def pick_date():
     rows = cur.fetchall()
     available_dates = [row[0] for row in rows]
 
+    cur.close()
+    conn.close()
+
     return render_template('book_date.html', id_filmu=id_filmu, id_kina=id_kina, available_dates=available_dates)
 
 @app.route('/book/time', methods=['POST'])
@@ -673,6 +676,9 @@ def pick_time():
     rows = cur.fetchall()
     available_times = [row[0] for row in rows]
 
+    cur.close()
+    conn.close()
+
     return render_template('book_time.html', id_filmu=id_filmu, id_kina=id_kina, date=date, available_times=available_times)
 
 @app.route('/book/seats', methods=['POST'])
@@ -682,7 +688,38 @@ def pick_seat():
     date = request.form['date']
     time = request.form['time']
 
-    return render_template('book_seats.html', id_filmu=id_filmu, id_kina=id_kina, date=date, time=time)
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor()
+
+    query = """
+        SELECT z.rzad, z.numer
+        FROM zajete_miejsce z
+        JOIN rezerwacja r ON z.id_rezerwacji = r.id_rezerwacji
+        JOIN seans s ON r.id_seansu = s.id_seansu
+        WHERE s.id_filmu = %s AND s.data_seansu = %s AND s.godzina = %s;
+        """
+
+    cur.execute(query, (id_filmu, date, time))
+    rows = cur.fetchall()
+    reserved_seats = [(row[0], row[1]) for row in rows]
+
+    # Get the number of seats in the sala
+    sala_query = """
+    SELECT sa.ilosc_miejsc
+    FROM sala sa
+    JOIN seans s ON sa.id_sali = s.id_sali
+    WHERE s.id_filmu = %s AND s.data_seansu = %s AND s.godzina = %s;
+    """
+    cur.execute(sala_query, (id_filmu, date, time))
+    ilosc_miejsc = cur.fetchone()[0]
+    rows = (ilosc_miejsc + 9) // 10  # Number of rows, rounding up
+
+
+    cur.close()
+    conn.close()
+
+    return render_template('book_seats.html', id_filmu=id_filmu, id_kina=id_kina, date=date, time=time, reserved_seats=reserved_seats, rows=rows)
+
 
 if __name__ == '__main__': 
     app.run(debug=True) 

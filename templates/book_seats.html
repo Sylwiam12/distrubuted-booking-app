@@ -1,17 +1,102 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wybierz miejsca</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-</head>
-<body>
-    <div class="container mt-5">
-        <h1 class="text-center">Wybierz miejsca</h1>
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container">
+    <a href="/" class="btn btn-light" style="position: absolute; top: 20px; left: 20px;">
+        <i class="fas fa-home"></i> Home
+    </a>
+    <h1>Dostępne miejsca</h1>
+    <div class="seats-container">
+        <div class="screen">EKRAN</div>
+        {% for rzad in range(rows) %}
+            <div class="row">
+                <div class="row-number">{{ rzad + 1 }}</div>
+                {% for numer in range(10) %}
+                    {% set seat = (rzad + 1, numer + 1) %}
+                    {% if seat in reserved_seats %}
+                        <div class="seat reserved">{{ numer + 1 }}</div>
+                    {% else %}
+                        <div class="seat available">{{ numer + 1 }}</div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endfor %}
     </div>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-</html>
+    <div class="text-center mt-3">
+        <label for="ilosc-miejsc">Ilość miejsc:</label>
+        <input type="number" id="ilosc-miejsc" name="ilosc-miejsc" min="1" max="10">
+    </div>
+</div>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+    h1 {
+        text-align: center;
+        color: #333;
+    }
+    .container {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 90%; /* Adjust the width here */
+        max-width: 800px; /* Adjust the max-width here */
+        margin: 20px;
+        position: relative;
+    }
+    .seats-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .screen {
+        background-color: #333;
+        color: white;
+        width: 90%;
+        text-align: center;
+        padding: 5px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+    .row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .row-number {
+        width: 30px;
+        text-align: center;
+        margin-right: 10px;
+        font-weight: bold;
+        color: #555;
+    }
+    .seat {
+        width: 30px;
+        height: 30px;
+        margin: 5px;
+        display: inline-block;
+        text-align: center;
+        line-height: 30px;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+    .available {
+        background-color: #28a745;
+        color: white;
+    }
+    .reserved {
+        background-color: #dc3545;
+        color: white;
+    }
+</style>
+{% endblock %}
