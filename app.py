@@ -628,9 +628,30 @@ def book_filmy():
 @app.route('/book/cinema', methods=['POST'])
 def pick_cinema():
     id_filmu = request.form['id_filmu']
-    # Save the id_filmu in session or pass it to the next page as needed
-    # For now, we just pass it to the render template
-    return render_template('book_cinema.html', id_filmu=id_filmu)
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor()
+    cur.execute('''SELECT id_kina, nazwa, lokalizacja FROM kino''')
+    data = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    kina = []
+    for row in data:
+        kino = {
+            'id_kina': row[0],
+            'nazwa': row[1],
+            'lokalizacja': row[2],
+        }
+        kina.append(kino)
+    
+    return render_template('book_cinema.html', id_filmu=id_filmu, kina=kina)
+
+@app.route('/book/date', methods=['POST'])
+def pick_date():
+    id_filmu = request.form['id_filmu']
+    id_kina = request.form['id_kina']
+
+    return render_template('book_date.html', id_filmu=id_filmu, id_kina=id_kina)
 
 if __name__ == '__main__': 
     app.run(debug=True) 
