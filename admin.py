@@ -323,6 +323,10 @@ def available_times():
     
     return jsonify(available_start_times)
 
+from flask import request, render_template, redirect, url_for
+import mysql.connector
+from mysql.connector import Error
+
 @admin_bp.route('/dodaj_seans', methods=['POST'])
 def dodaj_seans():
     film_id = request.form['film']
@@ -330,54 +334,61 @@ def dodaj_seans():
     date = request.form['data']
     time = request.form['godzina']
     
-    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
-    cur = conn.cursor()
+    try:
+        conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+        conn.start_transaction()
+        cur = conn.cursor()
 
-    # Get the movie duration
-    cur.execute('SELECT czas_trwania FROM film WHERE id_filmu = %s', (film_id,))
-    duration = cur.fetchone()[0]
-    duration_in_minutes = duration  # assuming czas_trwania is in minutes
+        # Get the movie duration
+        cur.execute('SELECT czas_trwania FROM film WHERE id_filmu = %s', (film_id,))
+        duration = cur.fetchone()[0]
+        duration_in_minutes = duration  # assuming czas_trwania is in minutes
 
-    # Calculate time slots to be used
-    start_hour, start_minute = map(int, time.split(':'))
-    interval = 15  # minutes
+        # Calculate time slots to be used
+        start_hour, start_minute = map(int, time.split(':'))
+        interval = 15  # minutes
 
-    times_to_check = [
-        f"{(start_hour + (start_minute + i) // 60):02}:{(start_minute + i) % 60:02}"
-        for i in range(0, duration_in_minutes, interval)
-    ]
+        times_to_check = [
+            f"{(start_hour + (start_minute + i) // 60):02}:{(start_minute + i) % 60:02}"
+            for i in range(0, duration_in_minutes, interval)
+        ]
 
-    # Check if all the times are available in the dostepnosc_sali table
-    unavailable_times = []
-    for check_time in times_to_check:
-        cur.execute('SELECT 1 FROM dostepnosc_sali WHERE id_sali = %s AND dzien = %s AND dostepna_godzina = %s', 
-                    (sala_id, date, check_time))
-        if not cur.fetchone():
-            unavailable_times.append(check_time)
+        # Check if all the times are available in the dostepnosc_sali table
+        unavailable_times = []
+        for check_time in times_to_check:
+            cur.execute('SELECT 1 FROM dostepnosc_sali WHERE id_sali = %s AND dzien = %s AND dostepna_godzina = %s FOR UPDATE', 
+                        (sala_id, date, check_time))
+            if not cur.fetchone():
+                unavailable_times.append(check_time)
 
-    if unavailable_times:
+        if unavailable_times:
+            conn.rollback()
+            return render_template('error.html', message=f"Time slots {', '.join(unavailable_times)} are not available for this seans.")
+
+        # Proceed with inserting the seans
+        cur.execute('''
+            INSERT INTO seans (id_filmu, id_sali, data_seansu, godzina)
+            VALUES (%s, %s, %s, %s)
+            ''', (film_id, sala_id, date, time))
+        
+        seans_id = cur.lastrowid
+
+        for del_time in times_to_check:
+            cur.execute('DELETE FROM dostepnosc_sali WHERE id_sali = %s AND dzien = %s AND dostepna_godzina = %s', 
+                        (sala_id, date, del_time))
+            cur.execute('INSERT INTO zajete_godziny (godzina, id_seansu) VALUES (%s, %s)', 
+                        (del_time, seans_id))
+        
+        conn.commit()
+    except Error as e:
+        conn.rollback()
+        return render_template('error.html', message=f"An error occurred: {str(e)}")
+    finally:
+        cur.close()
         conn.close()
-        return render_template('error.html', message=f"Time slots {', '.join(unavailable_times)} are not available for this seans.")
-
-    # Proceed with inserting the seans
-    cur.execute('''
-        INSERT INTO seans (id_filmu, id_sali, data_seansu, godzina)
-        VALUES (%s, %s, %s, %s)
-        ''', (film_id, sala_id, date, time))
-    
-    seans_id = cur.lastrowid
-
-    for del_time in times_to_check:
-        cur.execute('DELETE FROM dostepnosc_sali WHERE id_sali = %s AND dzien = %s AND dostepna_godzina = %s', 
-                    (sala_id, date, del_time))
-        cur.execute('INSERT INTO zajete_godziny (godzina, id_seansu) VALUES (%s, %s)', 
-                    (del_time, seans_id))
-    
-    conn.commit()
-    cur.close()
-    conn.close()
     
     return redirect(url_for('admin.seanse'))
+
 
 
 @admin_bp.route('/delete_seans', methods=['POST'])
