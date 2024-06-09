@@ -7,6 +7,7 @@ from admin import admin_bp
 from auth import auth_bp
 from user import user_bp
 
+
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
 

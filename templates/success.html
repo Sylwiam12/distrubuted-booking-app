@@ -2,9 +2,13 @@
 
 {% block body %}
 <div class="container">
+    <a href="/" class="btn btn-light" style="position: absolute; top: 0; left: 0;">
+        <i class="fas fa-home"></i>
+    </a>
     <h1>Rezerwacja zakończona sukcesem!</h1>
     <p>Twoja płatność została przetworzona, a miejsca zostały zarezerwowane.</p>
-    <a href="/" class="btn btn-primary">Powrót do strony głównej</a>
+    <div>
+        <a href="{{ url_for('user.success', download='true') }}" class="btn btn-primary mt-3">Pobierz Bilet</a>
+    </div>
 </div>
 {% endblock %}
-

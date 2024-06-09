@@ -3,7 +3,10 @@ from forms import *
 from flask_mail import Mail, Message
 import mysql.connector
 from config import host, database, user, password
-
+import qrcode
+from io import BytesIO
+from flask import send_file, session, redirect, url_for
+from PIL import Image, ImageDraw, ImageFont
 
 user_bp = Blueprint('user', __name__, template_folder='templates')
 
@@ -256,6 +259,7 @@ def summary():
 
 
 @user_bp.route('/payment', methods=['POST'])
+@user_bp.route('/payment', methods=['POST'])
 def payment():
     if 'user_id' not in session:
         return redirect(url_for('login'))
@@ -275,7 +279,6 @@ def payment():
     conn.start_transaction()
 
     try:
-        # Check if any of the seats are already taken for the same seans
         for row, seat in zip(rows, seats):
             cur.execute(
                 "SELECT 1 FROM zajete_miejsce zm "
@@ -287,14 +290,12 @@ def payment():
                 conn.rollback()
                 return render_template('error.html', message=f"Seat {row}-{seat} is already taken for this seans.")
 
-        # Insert the reservation
         cur.execute(
             "INSERT INTO rezerwacja (id_uzytkownika, id_seansu, ilosc_miejsc) VALUES (%s, %s, %s)",
             (user_id, id_seansu, len(seat_details))
         )
         reservation_id = cur.lastrowid
 
-        # Insert each seat
         for row, seat, ticket in seat_details:
             cur.execute(
                 "INSERT INTO zajete_miejsce (id_rezerwacji, rzad, numer) VALUES (%s, %s, %s)",
@@ -302,6 +303,8 @@ def payment():
             )
 
         conn.commit()
+        session['reservation_id'] = reservation_id  # Store reservation ID in session
+        session['seat_details'] = seat_details  # Store seat details in session
     except mysql.connector.Error as err:
         conn.rollback()
         return render_template('error.html', message=f"Database error: {err}")
@@ -310,7 +313,6 @@ def payment():
         conn.close()
 
     return render_template('payment.html', reservation_id=reservation_id, seat_details=seat_details, total_cost=total_cost)
-
 
 
 @user_bp.route('/payment/confirmation', methods=['POST'])
@@ -342,10 +344,87 @@ def payment_confirmation():
         except mysql.connector.Error as err:
             conn.rollback()
             return redirect(url_for('user.failure'))
-    
-@user_bp.route('/payment/success')
+
+@user_bp.route('/payment/success')        
 def success():
-    return render_template('success.html')
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    reservation_id = session.get('reservation_id')
+    if not reservation_id:
+        return "Nie znaleziono rezerwacji", 404
+
+
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor(dictionary=True)
+
+    try:
+        # Fetch reservation details and all associated seats
+        cur.execute('''
+            SELECT r.id_rezerwacji, r.ilosc_miejsc, s.id_sali, s.id_filmu, f.tytul AS film_title, s.data_seansu, s.godzina, k.nazwa AS cinema_name, z.rzad, z.numer
+            FROM rezerwacja r
+            JOIN seans s ON r.id_seansu = s.id_seansu
+            JOIN film f ON s.id_filmu = f.id_filmu
+            JOIN sala sa ON s.id_sali = sa.id_sali
+            JOIN kino k ON sa.id_kina = k.id_kina
+            JOIN zajete_miejsce z ON r.id_rezerwacji = z.id_rezerwacji
+            WHERE r.id_rezerwacji = %s
+        ''', (reservation_id,))
+        reservations = cur.fetchall()
+    finally:
+        cur.close()
+        conn.close()
+
+    if not reservations:
+        return "Nie znaleziono rezerwacji", 404
+
+    reservation = reservations[0]  
+    seat_details = [(res['rzad'], res['numer']) for res in reservations]
+
+    if request.args.get('download') == 'true':
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=5,
+            border=2,
+        )
+        qr.add_data(f'Reservation ID: {reservation_id}')
+        qr.make(fit=True)
+        qr_img = qr.make_image(fill='black', back_color='white')
+
+        # Create ticket image
+        width, height = 300, 200 + 15 * len(seat_details)  # Adjust height based on number of seats
+        ticket_img = Image.new('RGB', (width, height), 'white')
+        draw = ImageDraw.Draw(ticket_img)
+
+        # Add text to the ticket in Polish
+        font = ImageFont.truetype("arial.ttf", 10)
+        draw.text((10, 30), f"Film: {reservation['film_title']}", fill='black', font=font)
+        draw.text((10, 50), f"Kino: {reservation['cinema_name']}", fill='black', font=font)
+        draw.text((10, 70), f"Data: {reservation['data_seansu']}", fill='black', font=font)
+        draw.text((10, 90), f"Godzina: {reservation['godzina']}", fill='black', font=font)
+        draw.text((10, 110), "Zarezerwowane Miejsca:", fill='black', font=font)
+
+        y = 130
+        for row, seat in seat_details:
+            draw.text((10, y), f"Rząd: {row}, Miejsce: {seat}", fill='black', font=font)
+            y += 15
+
+        qr_img = qr_img.resize((50, 50), Image.Resampling.LANCZOS)
+        ticket_img.paste(qr_img, (240, height - 60))
+
+        img_buffer = BytesIO()
+        ticket_img.save(img_buffer, format='PNG')
+        img_buffer.seek(0)
+
+        return send_file(
+            img_buffer,
+            as_attachment=True,
+            download_name='ticket.png',
+            mimetype='image/png'
+        )
+
+    return render_template('success.html', reservation=reservation, seat_details=seat_details)
 
 @user_bp.route('/payment/failure')
 def failure():
