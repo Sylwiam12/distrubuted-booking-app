@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 import mysql.connector
-from forms import *
+from forms import SigninForm, SignupForm
 from config import host, database, user, password
 from werkzeug.security import generate_password_hash, check_password_hash
 
