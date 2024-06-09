@@ -16,7 +16,7 @@
                         <div class="card-text flex-grow-1">
                             <p><strong>Adres:</strong> {{ kino.lokalizacja }}</p>
                         </div>
-                        <form action="{{ url_for('pick_date') }}" method="post" class="mt-2">
+                        <form action="{{ url_for('user.pick_date') }}" method="post" class="mt-2">
                             <input type="hidden" name="id_kina" value="{{ kino.id_kina }}">
                             <input type="hidden" name="id_filmu" value="{{ id_filmu }}">
                             <button type="submit" class="btn btn-primary">Wybierz</button>

@@ -21,7 +21,7 @@
                             <p><strong>Rok wydania:</strong> {{ film.rok_wydania }}</p>
                             <p><strong>Czas trwania:</strong> {{ film.czas_trwania }} minut</p>
                         </div>
-                        <form action="{{ url_for('pick_cinema') }}" method="post" class="mt-2">
+                        <form action="{{ url_for('user.pick_cinema') }}" method="post" class="mt-2">
                             <input type="hidden" name="id_filmu" value="{{ film.id_filmu }}">
                             <button type="submit" class="btn btn-primary">Wybierz</button>
                         </form>
