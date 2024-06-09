@@ -274,16 +274,12 @@ def summary():
 def payment():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     user_id = session['user_id']
     id_seansu = request.form['id_seansu']
     rows = request.form.getlist('rows[]')
     seats = request.form.getlist('seats[]')
     ticket_types = request.form.getlist('ticket_types[]')
-
-    # Ensure that all lists have the same length
-    if len(rows) != len(seats) or len(seats) != len(ticket_types):
-        return "Mismatched seat selection data", 400
 
     seat_details = list(zip(rows, seats, ticket_types))
     total_cost = sum(18 if ticket == 'ulgowy' else 24 for ticket in ticket_types)
@@ -291,44 +287,46 @@ def payment():
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor()
 
-    try:
-        # Start a transaction
-        conn.start_transaction()
+    conn.start_transaction()
 
-        # Lock the seats to prevent double booking
-        for row, seat, _ in seat_details:
-            cur.execute("""
-                SELECT 1 
-                FROM zajete_miejsce z
-                JOIN rezerwacja r ON z.id_rezerwacji = r.id_rezerwacji
-                JOIN seans s ON r.id_seansu = s.id_seansu
-                WHERE s.id_seansu = %s AND z.rzad = %s AND z.numer = %s
-                FOR UPDATE
-            """, (id_seansu, row, seat))
-            # Fetch the result to avoid the "Unread result found" error
-            cur.fetchall()
+    try:
+        # Check if any of the seats are already taken for the same seans
+        for row, seat in zip(rows, seats):
+            cur.execute(
+                "SELECT 1 FROM zajete_miejsce zm "
+                "JOIN rezerwacja r ON zm.id_rezerwacji = r.id_rezerwacji "
+                "WHERE r.id_seansu = %s AND zm.rzad = %s AND zm.numer = %s",
+                (id_seansu, row, seat)
+            )
+            if cur.fetchone():
+                conn.rollback()
+                return render_template('error.html', message=f"Seat {row}-{seat} is already taken for this seans.")
 
         # Insert the reservation
-        cur.execute("INSERT INTO rezerwacja (id_uzytkownika, id_seansu, ilosc_miejsc) VALUES (%s, %s, %s)", 
-                    (user_id, id_seansu, len(seat_details)))
+        cur.execute(
+            "INSERT INTO rezerwacja (id_uzytkownika, id_seansu, ilosc_miejsc) VALUES (%s, %s, %s)",
+            (user_id, id_seansu, len(seat_details))
+        )
         reservation_id = cur.lastrowid
 
         # Insert each seat
         for row, seat, ticket in seat_details:
-            cur.execute("INSERT INTO zajete_miejsce (id_rezerwacji, rzad, numer) VALUES (%s, %s, %s)", 
-                        (reservation_id, row, seat))
+            cur.execute(
+                "INSERT INTO zajete_miejsce (id_rezerwacji, rzad, numer) VALUES (%s, %s, %s)",
+                (reservation_id, row, seat)
+            )
 
-        # Commit the transaction
         conn.commit()
     except mysql.connector.Error as err:
-        # Rollback in case of error
         conn.rollback()
-        raise err
+        return render_template('error.html', message=f"Database error: {err}")
     finally:
         cur.close()
         conn.close()
 
     return render_template('payment.html', reservation_id=reservation_id, seat_details=seat_details, total_cost=total_cost)
+
+
 
 
 
