@@ -783,6 +783,10 @@ def payment():
     seats = request.form.getlist('seats[]')
     ticket_types = request.form.getlist('ticket_types[]')
 
+    # Ensure that all lists have the same length
+    if len(rows) != len(seats) or len(seats) != len(ticket_types):
+        return "Mismatched seat selection data", 400
+
     seat_details = list(zip(rows, seats, ticket_types))
     total_cost = sum(18 if ticket == 'ulgowy' else 24 for ticket in ticket_types)
 
@@ -794,7 +798,7 @@ def payment():
         conn.start_transaction()
 
         # Lock the seats to prevent double booking
-        for row, seat in seat_details:
+        for row, seat, _ in seat_details:
             cur.execute("""
                 SELECT 1 
                 FROM zajete_miejsce z
@@ -803,6 +807,8 @@ def payment():
                 WHERE s.id_seansu = %s AND z.rzad = %s AND z.numer = %s
                 FOR UPDATE
             """, (id_seansu, row, seat))
+            # Fetch the result to avoid the "Unread result found" error
+            cur.fetchall()
 
         # Insert the reservation
         cur.execute("INSERT INTO rezerwacja (id_uzytkownika, id_seansu, ilosc_miejsc) VALUES (%s, %s, %s)", 
@@ -825,6 +831,7 @@ def payment():
         conn.close()
 
     return render_template('payment.html', reservation_id=reservation_id, seat_details=seat_details, total_cost=total_cost)
+
 
 
 
