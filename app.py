@@ -789,19 +789,35 @@ def payment():
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor()
 
-    conn.start_transaction()
-
     try:
+        # Start a transaction
+        conn.start_transaction()
+
+        # Lock the seats to prevent double booking
+        for row, seat in seat_details:
+            cur.execute("""
+                SELECT 1 
+                FROM zajete_miejsce z
+                JOIN rezerwacja r ON z.id_rezerwacji = r.id_rezerwacji
+                JOIN seans s ON r.id_seansu = s.id_seansu
+                WHERE s.id_seansu = %s AND z.rzad = %s AND z.numer = %s
+                FOR UPDATE
+            """, (id_seansu, row, seat))
+
+        # Insert the reservation
         cur.execute("INSERT INTO rezerwacja (id_uzytkownika, id_seansu, ilosc_miejsc) VALUES (%s, %s, %s)", 
                     (user_id, id_seansu, len(seat_details)))
         reservation_id = cur.lastrowid
 
+        # Insert each seat
         for row, seat, ticket in seat_details:
             cur.execute("INSERT INTO zajete_miejsce (id_rezerwacji, rzad, numer) VALUES (%s, %s, %s)", 
                         (reservation_id, row, seat))
 
+        # Commit the transaction
         conn.commit()
     except mysql.connector.Error as err:
+        # Rollback in case of error
         conn.rollback()
         raise err
     finally:
@@ -809,6 +825,7 @@ def payment():
         conn.close()
 
     return render_template('payment.html', reservation_id=reservation_id, seat_details=seat_details, total_cost=total_cost)
+
 
 
 @app.route('/payment/confirmation', methods=['POST'])
