@@ -342,7 +342,7 @@ def payment_confirmation():
         except mysql.connector.Error as err:
             conn.rollback()
             return redirect(url_for('user.failure'))
-    
+
 @user_bp.route('/payment/success')
 def success():
     return render_template('success.html')
