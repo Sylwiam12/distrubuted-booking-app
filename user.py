@@ -345,7 +345,7 @@ def payment_confirmation():
             conn.rollback()
             return redirect(url_for('user.failure'))
 
-@user_bp.route('/payment/success')        
+@user_bp.route('/payment/success')
 def success():
     if 'user_id' not in session:
         return redirect(url_for('login'))
