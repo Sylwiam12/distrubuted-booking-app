@@ -259,7 +259,6 @@ def summary():
 
 
 @user_bp.route('/payment', methods=['POST'])
-@user_bp.route('/payment', methods=['POST'])
 def payment():
     if 'user_id' not in session:
         return redirect(url_for('login'))
