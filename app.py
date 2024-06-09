@@ -24,10 +24,6 @@ conn.close()
 def home():
     return render_template('index.html')
 
-@app.route('/admin')
-def admin():
-    return render_template('admin.html')
-
 
 @app.route('/movie')
 def movies():
@@ -478,11 +474,11 @@ def register():
             
             conn.commit()
 
-            flash('You have successfully registered', 'success')
+            flash('Zostałeś pomyślnie zarejestrowany!', 'success')
             return redirect(url_for('login'))
 
         except mysql.connector.Error as err:
-            flash(f"An error occurred: {err}", 'error')
+            flash(f"Wystąpił błąd: {err}", 'error')
             conn.rollback()
         
         finally:
@@ -516,10 +512,10 @@ def login():
                 return redirect(url_for('home')) 
 
             else:
-                flash('Username or Password incorrect', "error")
+                flash('Nazwa użytkownika lub hałso są niepoprawne!', "error")
 
         else:
-            flash('User not found', "error")
+            flash('Nie znaleziono użytkownika!', "error")
 
         conn.close()
 
@@ -528,7 +524,7 @@ def login():
 @app.route('/logout/')
 def logout():
     session.clear()
-    flash('You have successfully logged out.', 'success')
+    flash('Wylogowanie przebiegło pomyślnie!', 'success')
     return redirect(url_for('home'))
 
 @app.route('/contact', methods=['GET','POST'])
@@ -551,18 +547,27 @@ def contact():
 
 @app.route('/user_information')
 def user_information():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
     user_id = session['user_id']
 
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor(dictionary=True)
+    
+    # Fetch user information
     cur.execute('SELECT * FROM uzytkownik WHERE id_uzytkownika = %s', (user_id,))
     user_db = cur.fetchone()
 
+    # Fetch reservations with additional details
     cur.execute('''
-        SELECT r.id_rezerwacji, r.id_seansu, r.ilosc_miejsc, 
-               s.id_sali, s.id_filmu, s.data_seansu, s.godzina
+        SELECT r.id_rezerwacji, r.ilosc_miejsc, s.id_sali, s.id_filmu, f.tytul AS film_title, s.data_seansu, s.godzina, k.nazwa AS cinema_name, z.rzad, z.numer
         FROM rezerwacja r
         JOIN seans s ON r.id_seansu = s.id_seansu
+        JOIN film f ON s.id_filmu = f.id_filmu
+        JOIN sala sa ON s.id_sali = sa.id_sali
+        JOIN kino k ON sa.id_kina = k.id_kina
+        JOIN zajete_miejsce z ON r.id_rezerwacji = z.id_rezerwacji
         WHERE r.id_uzytkownika = %s
     ''', (user_id,))
     reservations = cur.fetchall()
@@ -574,6 +579,7 @@ def user_information():
         return render_template('user_information.html', user=user_db, reservations=reservations)
     else:
         return "User not found", 404
+
 
 @app.route('/catalog/')
 def catalog():
@@ -680,7 +686,6 @@ def pick_time():
     conn.close()
 
     return render_template('book_time.html', id_filmu=id_filmu, id_kina=id_kina, date=date, available_times=available_times)
-
 @app.route('/book/seats', methods=['POST'])
 def pick_seat():
     id_filmu = request.form['id_filmu']
@@ -697,28 +702,153 @@ def pick_seat():
         JOIN rezerwacja r ON z.id_rezerwacji = r.id_rezerwacji
         JOIN seans s ON r.id_seansu = s.id_seansu
         WHERE s.id_filmu = %s AND s.data_seansu = %s AND s.godzina = %s;
-        """
-
+    """
     cur.execute(query, (id_filmu, date, time))
     rows = cur.fetchall()
     reserved_seats = [(row[0], row[1]) for row in rows]
 
-    # Get the number of seats in the sala
     sala_query = """
-    SELECT sa.ilosc_miejsc
-    FROM sala sa
-    JOIN seans s ON sa.id_sali = s.id_sali
-    WHERE s.id_filmu = %s AND s.data_seansu = %s AND s.godzina = %s;
+        SELECT sa.ilosc_miejsc
+        FROM sala sa
+        JOIN seans s ON sa.id_sali = s.id_sali
+        WHERE s.id_filmu = %s AND s.data_seansu = %s AND s.godzina = %s;
     """
     cur.execute(sala_query, (id_filmu, date, time))
     ilosc_miejsc = cur.fetchone()[0]
-    rows = (ilosc_miejsc + 9) // 10  # Number of rows, rounding up
+    rows_count = (ilosc_miejsc + 9) // 10
 
+    all_seats = {row: list(range(1, 11)) for row in range(1, rows_count + 1)}
+    for rzad, numer in reserved_seats:
+        all_seats[rzad].remove(numer)
 
     cur.close()
     conn.close()
 
-    return render_template('book_seats.html', id_filmu=id_filmu, id_kina=id_kina, date=date, time=time, reserved_seats=reserved_seats, rows=rows)
+    return render_template('book_seats.html', id_filmu=id_filmu, id_kina=id_kina, date=date, time=time, all_seats=all_seats)
+
+@app.route('/summary', methods=['GET', 'POST'])
+def summary():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        id_filmu = request.form['id_filmu']
+        id_kina = request.form['id_kina']
+        date = request.form['date']
+        time = request.form['time']
+        rows = request.form.getlist('rows[]')
+        seats = request.form.getlist('seats[]')
+        ticket_types = request.form.getlist('ticket_types[]')
+
+        conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+        cur = conn.cursor()
+
+        # Fetch film and cinema names from the database based on their IDs
+        cur.execute("SELECT nazwa FROM kino WHERE id_kina = %s", (id_kina,))
+        cinema_name = cur.fetchone()[0]
+
+        cur.execute("SELECT tytul FROM film WHERE id_filmu = %s", (id_filmu,))
+        film_name = cur.fetchone()[0]
+
+        # Fetch the id_seansu
+        cur.execute("""
+            SELECT id_seansu FROM seans 
+            WHERE id_filmu = %s AND data_seansu = %s AND godzina = %s
+        """, (id_filmu, date, time))
+        id_seansu = cur.fetchone()
+        if id_seansu is None:
+            cur.close()
+            conn.close()
+            return "Seans not found", 404
+        id_seansu = id_seansu[0]
+
+        cur.close()
+        conn.close()
+
+        seat_details = list(zip(rows, seats, ticket_types))
+        total_cost = sum(18 if ticket == 'ulgowy' else 24 for ticket in ticket_types)
+
+        return render_template('summary.html', id_filmu=id_filmu, id_kina=id_kina, date=date, time=time, seat_details=seat_details, total_cost=total_cost, film_name=film_name, cinema_name=cinema_name, id_seansu=id_seansu)
+    return redirect(url_for('index'))
+
+
+@app.route('/payment', methods=['POST'])
+def payment():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user_id = session['user_id']
+    id_seansu = request.form['id_seansu']
+    rows = request.form.getlist('rows[]')
+    seats = request.form.getlist('seats[]')
+    ticket_types = request.form.getlist('ticket_types[]')
+
+    seat_details = list(zip(rows, seats, ticket_types))
+    total_cost = sum(18 if ticket == 'ulgowy' else 24 for ticket in ticket_types)
+
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor()
+
+    conn.start_transaction()
+
+    try:
+        cur.execute("INSERT INTO rezerwacja (id_uzytkownika, id_seansu, ilosc_miejsc) VALUES (%s, %s, %s)", 
+                    (user_id, id_seansu, len(seat_details)))
+        reservation_id = cur.lastrowid
+
+        for row, seat, ticket in seat_details:
+            cur.execute("INSERT INTO zajete_miejsce (id_rezerwacji, rzad, numer) VALUES (%s, %s, %s)", 
+                        (reservation_id, row, seat))
+
+        conn.commit()
+    except mysql.connector.Error as err:
+        conn.rollback()
+        raise err
+    finally:
+        cur.close()
+        conn.close()
+
+    return render_template('payment.html', reservation_id=reservation_id, seat_details=seat_details, total_cost=total_cost)
+
+
+@app.route('/payment/confirmation', methods=['POST'])
+def payment_confirmation():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    reservation_id = request.form['reservation_id']
+    confirmation = request.form['confirmation']
+
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor()
+
+    if confirmation == 'yes':
+        try:
+            cur.execute("INSERT INTO platnosc (id_rezerwacji, kwota, czas_rozpoczecia) VALUES (%s, %s, NOW())",
+                        (reservation_id, request.form['total_cost']))
+            conn.commit()
+            return redirect(url_for('success'))
+        except mysql.connector.Error as err:
+            conn.rollback()
+            return redirect(url_for('failure'))
+    else:
+        try:
+            cur.execute("DELETE FROM zajete_miejsce WHERE id_rezerwacji = %s", (reservation_id,))
+            cur.execute("DELETE FROM rezerwacja WHERE id_rezerwacji = %s", (reservation_id,))
+            conn.commit()
+            return redirect(url_for('failure'))
+        except mysql.connector.Error as err:
+            conn.rollback()
+            return redirect(url_for('failure'))
+    
+@app.route('/payment/success')
+def success():
+    return render_template('success.html')
+
+@app.route('/payment/failure')
+def failure():
+    return render_template('failure.html')
+
 
 
 if __name__ == '__main__': 

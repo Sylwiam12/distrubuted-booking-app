@@ -2,51 +2,33 @@
 
 {% block body %}
 <div class="container mt-5">
-    <a href="/" class="btn btn-light" style="position: absolute; top: 0; left: 0;">
-        <i class="fas fa-home"></i>
+    <a href="/" class="btn btn-light" style="position: absolute; top: 20px; left: 20px;">
+        <i class="fas fa-home"></i> Home
     </a>
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-12">
             <div class="card border-primary h-100">
                 <div class="card-header bg-primary text-white" style="background-color: #baead1;">
-                    User Information
+                    Moje rezerwacje
                 </div>
                 <div class="card-body">
-                    <p><strong>Name:</strong> {{ user.imie }} {{ user.nazwisko }}</p>
-                    <p><strong>Email:</strong> {{ user.email }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card border-primary h-100">
-                <div class="card-header bg-primary text-white " style="background-color: #baead1;">
-                    My Reservations
-                </div>
-                <div class="card-body">
-                    <div class="reservations">
-                        {% if reservations %}
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Reservation ID</th>
-                                        <th>Status</th>
-                                        <th>Reservation Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for reservation in reservations %}
-                                        <tr>
-                                            <td>{{ reservation.id_rezerwacji }}</td>
-                                            <td>Waiting</td>
-                                            <td>{{ reservation.data_seansu }} {{ reservation.godzina }}</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        {% else %}
-                            <p>No reservations found.</p>
-                        {% endif %}
-                    </div>
+                    {% if reservations %}
+                        {% for reservation in reservations %}
+                            <div class="reservation-detail mb-3 p-3 border rounded">
+                                <p><strong>ID Rezerwacji:</strong> {{ reservation.id_rezerwacji }}</p>
+                                <p><strong>Tytuł filmu:</strong> {{ reservation.film_title }}</p>
+                                <p><strong>Liczba miejsc:</strong> {{ reservation.ilosc_miejsc }}</p>
+                                {% if reservation.rzad and reservation.numer %}
+                                    <p><strong>Rząd i miejsce:</strong> {{ reservation.rzad }} - {{ reservation.numer }}</p>
+                                {% endif %}
+                                <p><strong>Data:</strong> {{ reservation.data_seansu }}</p>
+                                <p><strong>Godzina:</strong> {{ reservation.godzina }}</p>
+                                <p><strong>Kino:</strong> {{ reservation.cinema_name }}</p>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>Brak rezerwacji.</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -54,3 +36,11 @@
 </div>
 {% endblock %}
 
+<style>
+    .reservation-detail {
+        background-color: #f9f9f9;
+    }
+    .card-header {
+        background-color: #baead1 !important;
+    }
+</style>

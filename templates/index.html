@@ -1,71 +1,54 @@
 {% extends "base.html" %}
 
 {% block body %}
-
 <header class="my-4">
-    <h1 class="display-4 text-center">Cinema Booking System</h1>
+    <h1 class="display-4 text-center">Kino u Julki i Sylwii</h1>
 
-    <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #baead1; ">
+    <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #baead1;">
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav mx-auto d-flex">
                 {% if session.logged and session.user %}
-                    <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/book">Buy Ticket</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/user_information">Account Information</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/catalog">Movies</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logout">Wyloguj</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/contact">Kontakt</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/book">Kup bilet</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/user_information">Rezerwacje</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/catalog">Katalog filmów</a></li>
                 {% elif session.logged and session.admin %}
-                    <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/admin">Manage</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logout">Wyloguj</a></li>
                 {% else %}
-                    <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/register">Sign up</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/catalog">Movies</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/login">Zaloguj</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/register">Zarejestruj się</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/contact">Kontakt</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/catalog">Katalog filmów</a></li>
                 {% endif %}
             </ul>
         </div>
     </nav>
 </header>
 
-<div class="row">
-    <div class="col-md-3 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Movie 1</h5>
-                <p class="card-text">Description of Movie 1.</p>
-                <a href="#" class="btn btn-primary" style="background-color: #baead1; color: black;">Book Now</a>
-            </div>
+{% if session.logged and session.admin %}
+<div class="container">
+    <h1 class="text-center">Hej Admin!</h1>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="dropdown-option" onclick="navigate('/movie')" style="cursor:pointer; padding: 20px; background-color: #e9ecef; margin: 10px; text-align: center; border-radius: 5px;">Zarządzaj filmami</div>
         </div>
-    </div>
-    <div class="col-md-3 mb-4">
-        <div class="card">
-            <div class="card-body" >
-                <h5 class="card-title">Movie 2</h5>
-                <p class="card-text">Description of Movie 2.</p>
-                <a href="#" class="btn btn-primary" style="background-color: #baead1; color: black;">Book Now</a>
-            </div>
+        <div class="col-md-3">
+            <div class="dropdown-option" onclick="navigate('/seanse')" style="cursor:pointer; padding: 20px; background-color: #e9ecef; margin: 10px; text-align: center; border-radius: 5px;">Zarządzaj seansami</div>
         </div>
-    </div>
-    <div class="col-md-3 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Movie 3</h5>
-                <p class="card-text">Description of Movie 3.</p>
-                <a href="#" class="btn btn-primary" style="background-color: #baead1; color: black;">Book Now</a>
-            </div>
+        <div class="col-md-3">
+            <div class="dropdown-option" onclick="navigate('/uzytkownicy')" style="cursor:pointer; padding: 20px; background-color: #e9ecef; margin: 10px; text-align: center; border-radius: 5px;">Zarządzaj uprawnieniami</div>
         </div>
-    </div>
-    <div class="col-md-3 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Movie 4</h5>
-                <p class="card-text">Description of Movie 4.</p>
-                <a href="#" class="btn btn-primary" style="background-color: #baead1; color: black;">Book Now</a>
-            </div>
+        <div class="col-md-3">
+            <div class="dropdown-option" onclick="navigate('/kina')" style="cursor:pointer; padding: 20px; background-color: #e9ecef; margin: 10px; text-align: center; border-radius: 5px;">Zarządzaj kinami</div>
         </div>
     </div>
 </div>
 
-
+<script>
+    function navigate(route) {
+        window.location.href = route;
+    }
+</script>
+{% endif %}
 {% endblock body %}
