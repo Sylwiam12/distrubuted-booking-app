@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from forms import *
 from flask_mail import Mail, Message
 import mysql.connector
