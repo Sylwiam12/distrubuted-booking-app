@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, jsonif
 import mysql.connector
 import bcrypt
 from config import host, database, user, password
+import datetime
 
 admin_bp = Blueprint('admin', __name__, template_folder='templates')
 
@@ -135,7 +136,6 @@ def add_availability():
     messages = 0
     try:
         for time in times:
-            # Check if the time is already in zajete_godziny
             cur.execute('''
                 SELECT COUNT(*)
                 FROM zajete_godziny zg
@@ -145,7 +145,6 @@ def add_availability():
             occupied_count = cur.fetchone()[0]
             
             if occupied_count == 0:
-                # Check if the time is already in dostepnosc_sali
                 cur.execute('''
                     SELECT COUNT(*)
                     FROM dostepnosc_sali
