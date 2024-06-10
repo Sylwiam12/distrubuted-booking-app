@@ -14,32 +14,40 @@
 {% endmacro %}
 
 {% block body %}
-
 <div class="container d-flex justify-content-center align-items-center vh-100">
     <div>
-        <a href="http://localhost:8000" class="btn btn-light" style="position: absolute; top: 0; left: 0;">
+        <a href="/" class="btn btn-light" style="position: absolute; top: 0; left: 0;">
             <i class="fas fa-home"></i>
         </a>
         <h4 class="text-center">
-            <strong>Login</strong>
+            <strong>Register</strong>
         </h4>
         <hr>
 
         <form method="POST">
+            <div class="form-group">
+                {{ render_field(form.name, class="form-control", style="width: 400px;") }}
+            </div>
+            <div class="form-group">
+                {{ render_field(form.surname, class="form-control narrow-input") }}
+            </div>
             <div class="form-group">
                 {{ render_field(form.email, class="form-control narrow-input") }}
             </div>
             <div class="form-group">
                 {{ render_field(form.password, class="form-control narrow-input") }}
             </div>
+            <div class="form-group">
+                {{ render_field(form.confirm, class="form-control narrow-input") }}
+            </div>
 
-            <button type="submit" class="btn btn-primary btn-block" style="background-color: #49d48a; color: #fff;">Login</button>
+            <button type="submit"  class="btn btn-primary btn-block" style="background-color: #49d48a; color: #fff;">Register</button>
         </form>
 
         <hr>
 
         <p class="text-center">
-            <a href="/register" style = color:#000; > Sign up</a>
+            <a href="/login", style = color:#49d48a; >Sign in</a>
         </p>
     </div>
 </div>

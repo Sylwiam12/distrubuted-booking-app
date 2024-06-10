@@ -4,7 +4,7 @@
 <div class="container">
     <h1>Płatność</h1>
     <p>Czy zapłaciłeś?</p>
-    <form id="confirmationForm" action="{{ url_for('payment_confirmation') }}" method="post">
+    <form id="confirmationForm" action="{{ url_for('user.payment_confirmation') }}" method="post">
         <input type="hidden" name="reservation_id" value="{{ reservation_id }}">
         <input type="hidden" name="total_cost" value="{{ total_cost }}">
         <input type="hidden" id="confirmation" name="confirmation" value="yes">

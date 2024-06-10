@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for, flash
-import jwt
 import datetime
 import mysql.connector
 from functools import wraps
@@ -7,7 +6,6 @@ from mysql.connector import connect
 from werkzeug.security import generate_password_hash, check_password_hash
 from config import host, database, user, password, SECRET_KEY
 from forms import SigninForm, SignupForm
-import pytz
 
 auth_app = Flask(__name__)
 auth_app.secret_key = SECRET_KEY  # Ensure SECRET_KEY is set
@@ -77,7 +75,7 @@ def login():
                     session['admin'] = True
                 else:
                     session['user'] = True
-                return redirect(url_for('home')) 
+                return redirect("http://localhost:8000") 
 
             else:
                 flash('Nazwa użytkownika lub hałso są niepoprawne!', "error")

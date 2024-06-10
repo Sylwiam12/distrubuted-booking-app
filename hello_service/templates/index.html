@@ -8,7 +8,7 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav mx-auto d-flex">
                 {% if session.logged and session.user %}
-                    <li class="nav-item"><a class="nav-link" href="http://localhost:8003/logout/logout">Wyloguj</a></li>
+                    <li class="nav-item"><a class="nav-link" href="http://localhost:8001/logout">Wyloguj</a></li>
                     <li class="nav-item"><a class="nav-link" href="http://localhost:8003/contact">Kontakt</a></li>
                     <li class="nav-item"><a class="nav-link" href="http://localhost:8003/book">Kup bilet</a></li>
                     <li class="nav-item"><a class="nav-link" href="http://localhost:8003/user_information">Rezerwacje</a></li>
@@ -16,8 +16,8 @@
                 {% elif session.logged and session.admin %}
                     <li class="nav-item"><a class="nav-link" href="http://localhost:8001/logout">Wyloguj</a></li>
                 {% else %}
-                    <li class="nav-item"><a class="nav-link" href="http://localhost:8001/logout/login">Zaloguj</a></li>
-                    <li class="nav-item"><a class="nav-link" href="http://localhost:8001/logout/register">Zarejestruj się</a></li>
+                    <li class="nav-item"><a class="nav-link" href="http://localhost:8001/login">Zaloguj</a></li>
+                    <li class="nav-item"><a class="nav-link" href="http://localhost:8001/register">Zarejestruj się</a></li>
                     <li class="nav-item"><a class="nav-link" href="http://localhost:8003/contact">Kontakt</a></li>
                     <li class="nav-item"><a class="nav-link" href="http://localhost:8003/catalog">Katalog filmów</a></li>
                 {% endif %}

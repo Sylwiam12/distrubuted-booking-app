@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block body %}
+<header class="my-4">
+    <h1 class="display-4 text-center">Kino u Julki i Sylwii</h1>
+
+    <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #baead1;">
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mx-auto d-flex">
+                {% if session.logged and session.user %}
+                    <li class="nav-item"><a class="nav-link" href="/logout">Wyloguj</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/contact">Kontakt</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/book">Kup bilet</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/user_information">Rezerwacje</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/catalog">Katalog filmów</a></li>
+                {% elif session.logged and session.admin %}
+                    <li class="nav-item"><a class="nav-link" href="/logout">Wyloguj</a></li>
+                {% else %}
+                    <li class="nav-item"><a class="nav-link" href="/login">Zaloguj</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/register">Zarejestruj się</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/contact">Kontakt</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/catalog">Katalog filmów</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+</header>
+
+{% if session.logged and session.admin %}
+<div class="container">
+    <h1 class="text-center">Hej Admin!</h1>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="dropdown-option" onclick="navigate('/movie')" style="cursor:pointer; padding: 20px; background-color: #e9ecef; margin: 10px; text-align: center; border-radius: 5px;">Zarządzaj filmami</div>
+        </div>
+        <div class="col-md-3">
+            <div class="dropdown-option" onclick="navigate('/seanse')" style="cursor:pointer; padding: 20px; background-color: #e9ecef; margin: 10px; text-align: center; border-radius: 5px;">Zarządzaj seansami</div>
+        </div>
+        <div class="col-md-3">
+            <div class="dropdown-option" onclick="navigate('/uzytkownicy')" style="cursor:pointer; padding: 20px; background-color: #e9ecef; margin: 10px; text-align: center; border-radius: 5px;">Zarządzaj uprawnieniami</div>
+        </div>
+        <div class="col-md-3">
+            <div class="dropdown-option" onclick="navigate('/kina')" style="cursor:pointer; padding: 20px; background-color: #e9ecef; margin: 10px; text-align: center; border-radius: 5px;">Zarządzaj kinami</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function navigate(route) {
+        window.location.href = route;
+    }
+</script>
+{% endif %}
+{% endblock body %}

@@ -13,7 +13,7 @@
                 <div class="card">
                     <div class="card-body d-flex flex-column justify-content-between">
                         <h5 class="card-title">{{ date }}</h5>
-                        <form action="{{ url_for('pick_time') }}" method="post" class="mt-2 text-center">
+                        <form action="{{ url_for('user.pick_time') }}" method="post" class="mt-2 text-center">
                             <input type="hidden" name="id_kina" value="{{ id_kina }}">
                             <input type="hidden" name="id_filmu" value="{{ id_filmu }}">
                             <input type="hidden" name="date" value="{{ date }}">

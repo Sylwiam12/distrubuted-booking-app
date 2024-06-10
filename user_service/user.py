@@ -35,7 +35,7 @@ def contact():
 @user_app.route('/user_information')
 def user_information():
     if 'user_id' not in session:
-        return redirect(url_for('login'))
+        return redirect("http://localhost:8001/login")
 
     user_id = session['user_id']
 
@@ -183,6 +183,7 @@ def pick_seat():
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor()
 
+    # Fetch reserved seats
     query = """
         SELECT z.rzad, z.numer
         FROM zajete_miejsce z
@@ -194,6 +195,7 @@ def pick_seat():
     rows = cur.fetchall()
     reserved_seats = [(row[0], row[1]) for row in rows]
 
+    # Fetch the number of seats
     sala_query = """
         SELECT sa.ilosc_miejsc
         FROM sala sa
@@ -204,9 +206,16 @@ def pick_seat():
     ilosc_miejsc = cur.fetchone()[0]
     rows_count = (ilosc_miejsc + 9) // 10
 
+    # Initialize all seats
     all_seats = {row: list(range(1, 11)) for row in range(1, rows_count + 1)}
+
+    # Remove reserved seats
     for rzad, numer in reserved_seats:
-        all_seats[rzad].remove(numer)
+        if rzad in all_seats and numer in all_seats[rzad]:
+            all_seats[rzad].remove(numer)
+        else:
+            # Log the error or handle it appropriately
+            print(f"Warning: Seat {numer} in row {rzad} is reserved but not in the expected range.")
 
     cur.close()
     conn.close()
@@ -216,7 +225,7 @@ def pick_seat():
 @user_app.route('/summary', methods=['GET', 'POST'])
 def summary():
     if 'user_id' not in session:
-        return redirect(url_for('login'))
+        return redirect("http://localhost:8001/login")
 
     if request.method == 'POST':
         id_filmu = request.form['id_filmu']
@@ -256,13 +265,13 @@ def summary():
         total_cost = sum(18 if ticket == 'ulgowy' else 24 for ticket in ticket_types)
 
         return render_template('summary.html', id_filmu=id_filmu, id_kina=id_kina, date=date, time=time, seat_details=seat_details, total_cost=total_cost, film_name=film_name, cinema_name=cinema_name, id_seansu=id_seansu)
-    return redirect(url_for('index'))
+    return redirect("http://localhost:8000")
 
 
 @user_app.route('/payment', methods=['POST'])
 def payment():
     if 'user_id' not in session:
-        return redirect(url_for('login'))
+        return redirect("http://localhost:8001/login")
 
     user_id = session['user_id']
     id_seansu = request.form['id_seansu']
@@ -318,7 +327,7 @@ def payment():
 @user_app.route('/payment/confirmation', methods=['POST'])
 def payment_confirmation():
     if 'user_id' not in session:
-        return redirect(url_for('login'))
+        return redirect("http://localhost:8001/login")
     
     reservation_id = request.form['reservation_id']
     confirmation = request.form['confirmation']
@@ -331,24 +340,24 @@ def payment_confirmation():
             cur.execute("INSERT INTO platnosc (id_rezerwacji, kwota, czas_rozpoczecia) VALUES (%s, %s, NOW())",
                         (reservation_id, request.form['total_cost']))
             conn.commit()
-            return redirect(url_for('user.success'))
+            return redirect(url_for('success'))
         except mysql.connector.Error as err:
             conn.rollback()
-            return redirect(url_for('user.failure'))
+            return redirect(url_for('failure'))
     else:
         try:
             cur.execute("DELETE FROM zajete_miejsce WHERE id_rezerwacji = %s", (reservation_id,))
             cur.execute("DELETE FROM rezerwacja WHERE id_rezerwacji = %s", (reservation_id,))
             conn.commit()
-            return redirect(url_for('user.failure'))
+            return redirect(url_for('failure'))
         except mysql.connector.Error as err:
             conn.rollback()
-            return redirect(url_for('user.failure'))
+            return redirect(url_for('failure'))
 
 @user_app.route('/payment/success')
 def success():
     if 'user_id' not in session:
-        return redirect(url_for('login'))
+        return redirect("http://localhost:8001/login")
 
     reservation_id = session.get('reservation_id')
     if not reservation_id:

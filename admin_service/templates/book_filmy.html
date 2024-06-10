@@ -5,20 +5,24 @@
     <a href="/" class="btn btn-light" style="position: absolute; top: 0; left: 0;">
         <i class="fas fa-home"></i>
     </a>
-    <h1 class="mt-5">Wybierz kino</h1>
+    <h1 class="mt-5">Wybierz film</h1>
     <div class="row mt-4">
-        {% for kino in kina %}
-        <div class="col-lg-4 col-md-4 col-sm-6 mb-4"> <!-- Adjusted to col-lg-4 for 3 columns per row -->
+        {% for film in films %}
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
             <div class="movie-card" style="height: 450px;">
                 <div class="card">
                     <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">{{ kino.nazwa }}</h5>
+                        <h5 class="card-title">{{ film.tytul }}</h5>
                         <div class="card-text flex-grow-1">
-                            <p><strong>Adres:</strong> {{ kino.lokalizacja }}</p>
+                            <p><strong>Reżyser:</strong> {{ film.rezyser }}</p>
+                            <p><strong>Gatunek:</strong> {{ film.gatunek }}</p>
+                            <p><strong>Język:</strong> {{ film.jezyk }}</p>
+                            <p><strong>Napisy:</strong> {{ 'Tak' if film.napisy else 'Nie' }}</p>
+                            <p><strong>Rok wydania:</strong> {{ film.rok_wydania }}</p>
+                            <p><strong>Czas trwania:</strong> {{ film.czas_trwania }} minut</p>
                         </div>
-                        <form action="{{ url_for('pick_date') }}" method="post" class="mt-2">
-                            <input type="hidden" name="id_kina" value="{{ kino.id_kina }}">
-                            <input type="hidden" name="id_filmu" value="{{ id_filmu }}">
+                        <form action="{{ url_for('user.pick_cinema') }}" method="post" class="mt-2">
+                            <input type="hidden" name="id_filmu" value="{{ film.id_filmu }}">
                             <button type="submit" class="btn btn-primary">Wybierz</button>
                         </form>
                     </div>
@@ -27,8 +31,8 @@
         </div>
         {% endfor %}
     </div>
-    {% if not kina %}
-    <p>No cinemas found.</p>
+    {% if not films %}
+    <p>No films found.</p>
     {% endif %}
 </div>
 
