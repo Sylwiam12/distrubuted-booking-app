@@ -10,6 +10,7 @@ from forms import SigninForm, SignupForm
 import pytz
 
 auth_app = Flask(__name__)
+auth_app.secret_key = SECRET_KEY  # Ensure SECRET_KEY is set
 
 @auth_app.route('/register/', methods=['GET', 'POST'])
 def register():
@@ -42,7 +43,7 @@ def register():
             conn.commit()
 
             flash('Zostałeś pomyślnie zarejestrowany!', 'success')
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('login'))
 
         except mysql.connector.Error as err:
             flash(f"Wystąpił błąd: {err}", 'error')
@@ -92,7 +93,11 @@ def login():
 def logout():
     session.clear()
     flash('Wylogowanie przebiegło pomyślnie!', 'success')
-    return redirect(url_for('home')) 
+    return redirect(url_for('login'))  # Redirect to login instead of home
+
+@auth_app.route('/home')
+def home():
+    return render_template('home.html')  # Add a home route for testing
 
 if __name__ == '__main__':
-    auth_app.run(debug=True, port=8001)
+    auth_app.run(debug=True,host="0.0.0.0", port=8001)

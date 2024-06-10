@@ -447,4 +447,4 @@ def delete_seans():
     return redirect(url_for('seanse'))
 
 if __name__ == '__main__': 
-    admin_app.run(debug=True, port=8003) 
+    admin_app.run(debug=True, host="0.0.0.0", port=8003) 

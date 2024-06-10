@@ -401,4 +401,4 @@ def failure():
     return render_template('failure.html')
 
 if __name__ == '__main__': 
-    user_app.run(debug=True, port=8002) 
+    user_app.run(debug=True,host="0.0.0.0", port=8002) 
