@@ -8,18 +8,18 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav mx-auto d-flex">
                 {% if session.logged and session.user %}
-                    <li class="nav-item"><a class="nav-link" href="http://127.0.0.1:8001/logout/logout">Wyloguj</a></li>
-                    <li class="nav-item"><a class="nav-link" href="http://127.0.0.1:8002/contact">Kontakt</a></li>
-                    <li class="nav-item"><a class="nav-link" href="http://127.0.0.1:8002/book">Kup bilet</a></li>
-                    <li class="nav-item"><a class="nav-link" href="http://127.0.0.1:8002/user_information">Rezerwacje</a></li>
-                    <li class="nav-item"><a class="nav-link" href="http://127.0.0.1:8002/catalog">Katalog filmów</a></li>
+                    <li class="nav-item"><a class="nav-link" href="http://localhost:8003/logout/logout">Wyloguj</a></li>
+                    <li class="nav-item"><a class="nav-link" href="http://localhost:8003/contact">Kontakt</a></li>
+                    <li class="nav-item"><a class="nav-link" href="http://localhost:8003/book">Kup bilet</a></li>
+                    <li class="nav-item"><a class="nav-link" href="http://localhost:8003/user_information">Rezerwacje</a></li>
+                    <li class="nav-item"><a class="nav-link" href="http://localhost:8003/catalog">Katalog filmów</a></li>
                 {% elif session.logged and session.admin %}
-                    <li class="nav-item"><a class="nav-link" href="http://127.0.0.1:8001/logout">Wyloguj</a></li>
+                    <li class="nav-item"><a class="nav-link" href="http://localhost:8001/logout">Wyloguj</a></li>
                 {% else %}
-                    <li class="nav-item"><a class="nav-link" href="http://127.0.0.1:8001/logout/login">Zaloguj</a></li>
-                    <li class="nav-item"><a class="nav-link" href="http://127.0.0.1:8001/logout/register">Zarejestruj się</a></li>
-                    <li class="nav-item"><a class="nav-link" href="http://127.0.0.1:8002/contact">Kontakt</a></li>
-                    <li class="nav-item"><a class="nav-link" href="http://127.0.0.1:8002/catalog">Katalog filmów</a></li>
+                    <li class="nav-item"><a class="nav-link" href="http://localhost:8001/logout/login">Zaloguj</a></li>
+                    <li class="nav-item"><a class="nav-link" href="http://localhost:8001/logout/register">Zarejestruj się</a></li>
+                    <li class="nav-item"><a class="nav-link" href="http://localhost:8003/contact">Kontakt</a></li>
+                    <li class="nav-item"><a class="nav-link" href="http://localhost:8003/catalog">Katalog filmów</a></li>
                 {% endif %}
             </ul>
         </div>
@@ -31,16 +31,16 @@
     <h1 class="text-center">Hej Admin!</h1>
     <div class="row">
         <div class="col-md-3">
-            <div class="dropdown-option" onclick="navigate('http://127.0.0.1:8003/movie')" style="cursor:pointer; padding: 20px; background-color: #e9ecef; margin: 10px; text-align: center; border-radius: 5px;">Zarządzaj filmami</div>
+            <div class="dropdown-option" onclick="navigate('http://localhost:8002/movie')" style="cursor:pointer; padding: 20px; background-color: #e9ecef; margin: 10px; text-align: center; border-radius: 5px;">Zarządzaj filmami</div>
         </div>
         <div class="col-md-3">
-            <div class="dropdown-option" onclick="navigate('http://127.0.0.1:8003/seanse')" style="cursor:pointer; padding: 20px; background-color: #e9ecef; margin: 10px; text-align: center; border-radius: 5px;">Zarządzaj seansami</div>
+            <div class="dropdown-option" onclick="navigate('http://localhost:8002/seanse')" style="cursor:pointer; padding: 20px; background-color: #e9ecef; margin: 10px; text-align: center; border-radius: 5px;">Zarządzaj seansami</div>
         </div>
         <div class="col-md-3">
-            <div class="dropdown-option" onclick="navigate('http://127.0.0.1:8003/uzytkownicy')" style="cursor:pointer; padding: 20px; background-color: #e9ecef; margin: 10px; text-align: center; border-radius: 5px;">Zarządzaj uprawnieniami</div>
+            <div class="dropdown-option" onclick="navigate('http://localhost:8002/uzytkownicy')" style="cursor:pointer; padding: 20px; background-color: #e9ecef; margin: 10px; text-align: center; border-radius: 5px;">Zarządzaj uprawnieniami</div>
         </div>
         <div class="col-md-3">
-            <div class="dropdown-option" onclick="navigate('http://127.0.0.1:8003/kina')" style="cursor:pointer; padding: 20px; background-color: #e9ecef; margin: 10px; text-align: center; border-radius: 5px;">Zarządzaj kinami</div>
+            <div class="dropdown-option" onclick="navigate('http://localhost:8002/kina')" style="cursor:pointer; padding: 20px; background-color: #e9ecef; margin: 10px; text-align: center; border-radius: 5px;">Zarządzaj kinami</div>
         </div>
     </div>
 </div>
