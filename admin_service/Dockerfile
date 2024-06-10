@@ -2,10 +2,10 @@
 FROM python:3.9-slim
 
 # Set the working directory in the container
-WORKDIR /distrubuted-booking-app-1/admin_service
+WORKDIR /distrubuted-booking-app/admin_service
 
 # Copy the current directory contents into the container at /app
-COPY . /distrubuted-booking-app-1/admin_service
+COPY . /distrubuted-booking-app/admin_service
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
