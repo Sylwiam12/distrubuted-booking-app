@@ -4,6 +4,7 @@ from flask_mail import Mail, Message
 import mysql.connector
 from config import host, database, user, password
 import qrcode
+import base64
 from io import BytesIO
 from flask import send_file, session, redirect, url_for
 from PIL import Image, ImageDraw, ImageFont
@@ -353,12 +354,10 @@ def success():
     if not reservation_id:
         return "Nie znaleziono rezerwacji", 404
 
-
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor(dictionary=True)
 
     try:
-        # Fetch reservation details and all associated seats
         cur.execute('''
             SELECT r.id_rezerwacji, r.ilosc_miejsc, s.id_sali, s.id_filmu, f.tytul AS film_title, s.data_seansu, s.godzina, k.nazwa AS cinema_name, z.rzad, z.numer
             FROM rezerwacja r
@@ -377,53 +376,25 @@ def success():
     if not reservations:
         return "Nie znaleziono rezerwacji", 404
 
-    reservation = reservations[0]  
+    reservation = reservations[0]
     seat_details = [(res['rzad'], res['numer']) for res in reservations]
 
-    if request.args.get('download') == 'true':
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=5,
-            border=2,
-        )
-        qr.add_data(f'Reservation ID: {reservation_id}')
-        qr.make(fit=True)
-        qr_img = qr.make_image(fill='black', back_color='white')
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=5,
+        border=2,
+    )
+    qr.add_data(f'Reservation ID: {reservation_id}')
+    qr.make(fit=True)
+    qr_img = qr.make_image(fill='black', back_color='white')
 
-        # Create ticket image
-        width, height = 300, 200 + 15 * len(seat_details)  # Adjust height based on number of seats
-        ticket_img = Image.new('RGB', (width, height), 'white')
-        draw = ImageDraw.Draw(ticket_img)
+    img_buffer = BytesIO()
+    qr_img.save(img_buffer, format='PNG')
+    img_buffer.seek(0)
+    qr_data_url = f"data:image/png;base64,{base64.b64encode(img_buffer.read()).decode()}"
 
-        # Add text to the ticket in Polish
-        font = ImageFont.truetype("arial.ttf", 10)
-        draw.text((10, 30), f"Film: {reservation['film_title']}", fill='black', font=font)
-        draw.text((10, 50), f"Kino: {reservation['cinema_name']}", fill='black', font=font)
-        draw.text((10, 70), f"Data: {reservation['data_seansu']}", fill='black', font=font)
-        draw.text((10, 90), f"Godzina: {reservation['godzina']}", fill='black', font=font)
-        draw.text((10, 110), "Zarezerwowane Miejsca:", fill='black', font=font)
-
-        y = 130
-        for row, seat in seat_details:
-            draw.text((10, y), f"Rząd: {row}, Miejsce: {seat}", fill='black', font=font)
-            y += 15
-
-        qr_img = qr_img.resize((50, 50), Image.Resampling.LANCZOS)
-        ticket_img.paste(qr_img, (240, height - 60))
-
-        img_buffer = BytesIO()
-        ticket_img.save(img_buffer, format='PNG')
-        img_buffer.seek(0)
-
-        return send_file(
-            img_buffer,
-            as_attachment=True,
-            download_name='ticket.png',
-            mimetype='image/png'
-        )
-
-    return render_template('success.html', reservation=reservation, seat_details=seat_details)
+    return render_template('success.html', reservation=reservation, seat_details=seat_details, qr_data_url=qr_data_url)
 
 @user_bp.route('/payment/failure')
 def failure():

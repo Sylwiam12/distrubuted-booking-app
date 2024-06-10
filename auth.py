@@ -37,7 +37,7 @@ def register():
             conn.commit()
 
             flash('Zostałeś pomyślnie zarejestrowany!', 'success')
-            return redirect(url_for('login'))
+            return redirect(url_for('auth.login'))
 
         except mysql.connector.Error as err:
             flash(f"Wystąpił błąd: {err}", 'error')
