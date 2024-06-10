@@ -6,6 +6,7 @@ from config import host, database, user, password
 from admin import admin_bp
 from auth import auth_bp
 from user import user_bp
+from datetime import datetime
 
 
 app = Flask(__name__)
@@ -23,8 +24,20 @@ conn.commit()
 cur.close() 
 conn.close() 
 
+def delete_outdated_seanse():
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor()
+    try:
+        current_date = datetime.now().date()
+        cur.execute('DELETE FROM seans WHERE data_seansu < %s', (current_date,))
+        conn.commit()
+    finally:
+        cur.close()
+        conn.close()
+
 @app.route('/')
 def home():
+    delete_outdated_seanse()
     return render_template('index.html')
 
 
