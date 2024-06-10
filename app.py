@@ -7,12 +7,17 @@ from admin import admin_bp
 from auth import auth_bp
 from user import user_bp
 from datetime import datetime
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+import atexit
 
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
 
 mail = Mail(app)
+
+
 
 app.register_blueprint(admin_bp)
 app.register_blueprint(auth_bp)
@@ -35,9 +40,21 @@ def delete_outdated_seanse():
         cur.close()
         conn.close()
 
+def start_scheduler():
+    scheduler = BackgroundScheduler()
+    scheduler.start()
+    scheduler.add_job(
+        func=delete_outdated_seanse,
+        trigger=IntervalTrigger(hours=24),  # Run once every 24 hours
+        id='delete_outdated_seanse',
+        name='Delete outdated seanse',
+        replace_existing=True)
+    atexit.register(lambda: scheduler.shutdown())
+
+start_scheduler()
+
 @app.route('/')
 def home():
-    delete_outdated_seanse()
     return render_template('index.html')
 
 
