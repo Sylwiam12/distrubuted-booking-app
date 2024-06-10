@@ -45,6 +45,7 @@
         border: none;
         cursor: pointer;
         border-radius: 5px;
+        margin: 0 10px;
     }
     .modal {
         display: none;
@@ -88,7 +89,8 @@
     <h1>Lista Seansów</h1>
     <div class="button-container">
         <button class="button" id="addSeansBtn">Dodaj Seans</button>
-        <button onclick="toggleDeleteIcon()">Usuń seans</button>
+        <button class="button" onclick="toggleDeleteIcon()">Usuń seans</button>
+        <button class="button" onclick="goBack()">Powrót</button>
     </div>
     <table> 
         <thead> 
@@ -235,6 +237,7 @@
             });
         }
     }
+
     function toggleDeleteIcon() {
         var deleteForms = document.querySelectorAll('.delete-form');
         for (var i = 0; i < deleteForms.length; i++) {
@@ -245,6 +248,10 @@
         for (var i = 0; i < deleteIcons.length; i++) {
             deleteIcons[i].style.display = 'inline-block';
         }
+    }
+
+    function goBack() {
+        window.location.href = 'http://127.0.0.1:8000/';
     }
 </script>
 </body> 

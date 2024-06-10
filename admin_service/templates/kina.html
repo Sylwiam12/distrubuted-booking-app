@@ -85,6 +85,17 @@
             text-decoration: none;
             cursor: pointer;
         }
+        .back-button {
+            margin-top: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            text-align: center;
+            display: inline-block;
+        }
     </style>
     <script>
         function toggleSalaDetails(kinoId) {
@@ -233,6 +244,7 @@
             </tbody>
         </table>
         <button onclick="openModal()">Dodaj dostępność</button>
+        <a href="http://127.0.0.1:8000/" class="back-button">Powrót</a>
     </div>
     <div id="availabilityModal" class="modal">
         <div class="modal-content">

@@ -35,7 +35,7 @@ def add_movie():
     cur.close() 
     conn.close() 
   
-    return redirect(url_for('admin.movies'))
+    return redirect(url_for('movies'))
 
 @admin_app.route('/delete_movie', methods=['POST']) 
 def delete(): 
@@ -50,7 +50,7 @@ def delete():
     cur.close() 
     conn.close() 
   
-    return redirect(url_for('admin.movies')) 
+    return redirect(url_for('movies')) 
   
   
 @admin_app.route('/update_movie', methods=['POST']) 
@@ -70,7 +70,7 @@ def update():
     cur.execute( '''UPDATE film SET tytul=%s, gatunek=%s, rezyser=%s, jezyk=%s, napisy=%s, rok_wydania=%s, czas_trwania=%s WHERE id_filmu=%s''', (tytul, gatunek, rezyser, jezyk, napisy, czas, rok, id)) 
   
     conn.commit() 
-    return redirect(url_for('admin.movies')) 
+    return redirect(url_for('movies')) 
   
   
 @admin_app.route('/kina')
@@ -205,7 +205,7 @@ def add_admin():
     cur.close()
     conn.close()
     
-    return redirect(url_for('admin.users'))
+    return redirect(url_for('users'))
 
 @admin_app.route('/remove_admin', methods=['POST'])
 def remove_admin():
@@ -220,7 +220,7 @@ def remove_admin():
     cur.close()
     conn.close()
     
-    return redirect(url_for('admin.users'))
+    return redirect(url_for('users'))
 
 @admin_app.route('/seanse')
 def seanse():
@@ -387,7 +387,7 @@ def dodaj_seans():
         cur.close()
         conn.close()
     
-    return redirect(url_for('admin.seanse'))
+    return redirect(url_for('seanse'))
 
 
 
@@ -444,7 +444,7 @@ def delete_seans():
     cur.close()
     conn.close()
 
-    return redirect(url_for('admin.seanse'))
+    return redirect(url_for('seanse'))
 
 if __name__ == '__main__': 
     admin_app.run(debug=True, port=8003) 
