@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container">
+    <a href="/" class="btn btn-light" style="position: absolute; top: 0; left: 0;">
+        <i class="fas fa-home"></i>
+    </a>
+    <h1 class="mt-5">Movies Catalog</h1>
+    <div class="row mt-4">
+        {% for film in films %}
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <div class="movie-card" style="height: 450px;">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ film.tytul }}</h5>
+                        <div class="card-text">
+                            <p><strong>Reżyser:</strong> {{ film.rezyser }}</p>
+                            <p><strong>Gatunek:</strong> {{ film.gatunek }}</p>
+                            <p><strong>Język:</strong> {{ film.jezyk }}</p>
+                            <p><strong>Napisy:</strong> {{ 'Tak' if film.napisy else 'Nie' }}</p>
+                            <p><strong>Rok wydania:</strong> {{ film.rok_wydania }}</p>
+                            <p><strong>Czas trwania:</strong> {{ film.czas_trwania }} minut</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% if not films %}
+    <p>No films found.</p>
+    {% endif %}
+</div>
+
+<style>
+    .movie-card {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .movie-card .card-title {
+        opacity: 1;
+        text-align: center;
+        transition: opacity 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        margin: 0;
+    }
+
+    .movie-card:hover .card-title {
+        opacity: 0;
+    }
+
+    .movie-card .card-body {
+        position: relative;
+        height: 350px;
+    }
+
+    .movie-card .card-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.9);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        padding: 20px;
+        width: 100%;
+    }
+
+    .movie-card:hover .card-text {
+        opacity: 1;
+    }
+</style>
+{% endblock %}

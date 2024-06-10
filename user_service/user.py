@@ -9,12 +9,12 @@ from io import BytesIO
 from flask import send_file, session, redirect, url_for
 from PIL import Image, ImageDraw, ImageFont
 
-user_bp = Blueprint('user', __name__, template_folder='templates')
+user_app = Flask(__name__)
 
 mail = Mail()
 
 
-@user_bp.route('/contact', methods=['GET','POST'])
+@user_app.route('/contact', methods=['GET','POST'])
 def contact():
     form = SendEmail(request.form)
     if request.method == 'POST' and form.validate():
@@ -32,7 +32,7 @@ def contact():
         flash('Your message has been sent successfully!', 'success')
     return render_template('contact.html', form=SendEmail())
 
-@user_bp.route('/user_information')
+@user_app.route('/user_information')
 def user_information():
     if 'user_id' not in session:
         return redirect(url_for('login'))
@@ -68,7 +68,7 @@ def user_information():
         return "User not found", 404
 
 
-@user_bp.route('/catalog/')
+@user_app.route('/catalog/')
 def catalog():
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor()
@@ -93,7 +93,7 @@ def catalog():
     
     return render_template('catalog.html', films=films)
 
-@user_bp.route('/book/')
+@user_app.route('/book/')
 def book_filmy():
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor()
@@ -118,7 +118,7 @@ def book_filmy():
     
     return render_template('book_filmy.html', films=films)
 
-@user_bp.route('/book/cinema', methods=['POST'])
+@user_app.route('/book/cinema', methods=['POST'])
 def pick_cinema():
     id_filmu = request.form['id_filmu']
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
@@ -139,7 +139,7 @@ def pick_cinema():
     
     return render_template('book_cinema.html', id_filmu=id_filmu, kina=kina)
 
-@user_bp.route('/book/date', methods=['POST'])
+@user_app.route('/book/date', methods=['POST'])
 def pick_date():
     id_filmu = request.form['id_filmu']
     id_kina = request.form['id_kina']
@@ -155,7 +155,7 @@ def pick_date():
 
     return render_template('book_date.html', id_filmu=id_filmu, id_kina=id_kina, available_dates=available_dates)
 
-@user_bp.route('/book/time', methods=['POST'])
+@user_app.route('/book/time', methods=['POST'])
 def pick_time():
     id_filmu = request.form['id_filmu']
     id_kina = request.form['id_kina']
@@ -173,7 +173,7 @@ def pick_time():
     conn.close()
 
     return render_template('book_time.html', id_filmu=id_filmu, id_kina=id_kina, date=date, available_times=available_times)
-@user_bp.route('/book/seats', methods=['POST'])
+@user_app.route('/book/seats', methods=['POST'])
 def pick_seat():
     id_filmu = request.form['id_filmu']
     id_kina = request.form['id_kina']
@@ -213,7 +213,7 @@ def pick_seat():
 
     return render_template('book_seats.html', id_filmu=id_filmu, id_kina=id_kina, date=date, time=time, all_seats=all_seats)
 
-@user_bp.route('/summary', methods=['GET', 'POST'])
+@user_app.route('/summary', methods=['GET', 'POST'])
 def summary():
     if 'user_id' not in session:
         return redirect(url_for('login'))
@@ -259,7 +259,7 @@ def summary():
     return redirect(url_for('index'))
 
 
-@user_bp.route('/payment', methods=['POST'])
+@user_app.route('/payment', methods=['POST'])
 def payment():
     if 'user_id' not in session:
         return redirect(url_for('login'))
@@ -315,7 +315,7 @@ def payment():
     return render_template('payment.html', reservation_id=reservation_id, seat_details=seat_details, total_cost=total_cost)
 
 
-@user_bp.route('/payment/confirmation', methods=['POST'])
+@user_app.route('/payment/confirmation', methods=['POST'])
 def payment_confirmation():
     if 'user_id' not in session:
         return redirect(url_for('login'))
@@ -345,7 +345,7 @@ def payment_confirmation():
             conn.rollback()
             return redirect(url_for('user.failure'))
 
-@user_bp.route('/payment/success')
+@user_app.route('/payment/success')
 def success():
     if 'user_id' not in session:
         return redirect(url_for('login'))
@@ -396,6 +396,9 @@ def success():
 
     return render_template('success.html', reservation=reservation, seat_details=seat_details, qr_data_url=qr_data_url)
 
-@user_bp.route('/payment/failure')
+@user_app.route('/payment/failure')
 def failure():
     return render_template('failure.html')
+
+if __name__ == '__main__': 
+    user_app.run(debug=True, port=8002) 

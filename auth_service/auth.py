@@ -1,12 +1,17 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for, flash
+import jwt
+import datetime
 import mysql.connector
-from forms import SigninForm, SignupForm
-from config import host, database, user, password
+from functools import wraps
+from mysql.connector import connect
 from werkzeug.security import generate_password_hash, check_password_hash
+from config import host, database, user, password, SECRET_KEY
+from forms import SigninForm, SignupForm
+import pytz
 
-auth_bp = Blueprint('auth', __name__, template_folder='templates')
+auth_app = Flask(__name__)
 
-@auth_bp.route('/register/', methods=['GET', 'POST'])
+@auth_app.route('/register/', methods=['GET', 'POST'])
 def register():
     form = SignupForm(request.form)
     
@@ -50,7 +55,7 @@ def register():
     return render_template('register.html', form=form)
 
 
-@auth_bp.route('/login/', methods=['GET', 'POST'])
+@auth_app.route('/login/', methods=['GET', 'POST'])
 def login():
     form = SigninForm(request.form)
 
@@ -83,8 +88,11 @@ def login():
 
     return render_template('login.html', form=form)
 
-@auth_bp.route('/logout/')
+@auth_app.route('/logout/')
 def logout():
     session.clear()
     flash('Wylogowanie przebiegło pomyślnie!', 'success')
-    return redirect(url_for('home'))
+    return redirect(url_for('home')) 
+
+if __name__ == '__main__':
+    auth_app.run(debug=True, port=8001)

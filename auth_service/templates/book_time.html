@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container">
+    <a href="/" class="btn btn-light" style="position: absolute; top: 0; left: 0;">
+        <i class="fas fa-home"></i>
+    </a>
+    <h1 class="mt-5">Wybierz godzinę</h1>
+    <div class="row mt-4">
+        {% for time in available_times %}
+        <div class="col-lg-4 col-md-4 col-sm-6 mb-4">
+            <div class="date-card" style="height: 150px;">
+                <div class="card">
+                    <div class="card-body d-flex flex-column justify-content-between">
+                        <h5 class="card-title">{{ time }}</h5>
+                        <form action="{{ url_for('user.pick_seat') }}" method="post" class="mt-2 text-center">
+                            <input type="hidden" name="id_kina" value="{{ id_kina }}">
+                            <input type="hidden" name="id_filmu" value="{{ id_filmu }}">
+                            <input type="hidden" name="date" value="{{ date }}">
+                            <input type="hidden" name="time" value="{{ time }}">
+                            <button type="submit" class="btn btn-primary align-self-center">Wybierz</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% if not available_times %}
+    <p>No available times found.</p>
+    {% endif %}
+</div>
+
+<style>
+    .date-card {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .date-card .card-title {
+        text-align: center;
+        transition: opacity 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: auto;
+        margin: 0;
+    }
+
+    .date-card .card-body {
+        position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+</style>
+{% endblock %}
