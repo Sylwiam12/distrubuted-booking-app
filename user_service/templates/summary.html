@@ -21,7 +21,7 @@
         <p><strong>Całkowity koszt:</strong> {{ total_cost }} PLN</p>
         
         <!-- Button for Proceeding to Payment -->
-        <form action="{{ url_for('user.payment') }}" method="post" id="payment-form">
+        <form action="{{ url_for('payment') }}" method="post" id="payment-form">
             <input type="hidden" name="id_filmu" value="{{ id_filmu }}">
             <input type="hidden" name="id_kina" value="{{ id_kina }}">
             <input type="hidden" name="date" value="{{ date }}">

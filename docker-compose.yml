@@ -1,28 +1,15 @@
 version: '3'
 services:
-  hello-service:
-    build:
-      context: ./hello_service
-      dockerfile: Dockerfile
-    container_name: hello-service
-    ports:
-      - "8000:8000"
-    environment:
-      - FLASK_APP=app
-    depends_on:
-      - auth-service
-      - admin-service
-      - user-service
-
   auth-service:
     build:
       context: ./auth_service
       dockerfile: Dockerfile
     container_name: auth-service
     ports:
-      - "8001:8000"
+      - "8000:8000"
     environment:
       - FLASK_APP=auth
+    
 
   admin-service:
     build:
@@ -33,6 +20,8 @@ services:
       - "8002:8000"
     environment:
       - FLASK_APP=admin
+    depends_on:
+      - auth-service
 
   user-service:
     build:
@@ -43,3 +32,5 @@ services:
       - "8003:8000"
     environment:
       - FLASK_APP=user
+    depends_on:
+      - auth-service    

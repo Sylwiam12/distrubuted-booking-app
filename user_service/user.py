@@ -8,12 +8,24 @@ import base64
 from io import BytesIO
 from flask import send_file, session, redirect, url_for
 from PIL import Image, ImageDraw, ImageFont
+import jwt
+
+JWT_SECRET_KEY = 'your_jwt_secret_key'
+JWT_ALGORITHM = 'HS256'
 
 user_app = Flask(__name__)
 
-mail = Mail()
+mail = Mail(user_app)
 
-
+def verify_token(token):
+    try:
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        return payload['user_id']
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+    
 @user_app.route('/contact', methods=['GET','POST'])
 def contact():
     form = SendEmail(request.form)
@@ -34,11 +46,16 @@ def contact():
 
 @user_app.route('/user_information')
 def user_information():
-    if 'user_id' not in session:
+    token = request.cookies.get('token')
+    
+    if not token:
         return redirect("http://localhost:8001/login")
-
-    user_id = session['user_id']
-
+    
+    user_id = verify_token(token)
+    
+    if not user_id:
+        return redirect("http://localhost:8001/login")
+    
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor(dictionary=True)
     
@@ -66,6 +83,7 @@ def user_information():
         return render_template('user_information.html', user=user_db, reservations=reservations)
     else:
         return "User not found", 404
+
 
 
 @user_app.route('/catalog/')
@@ -224,8 +242,15 @@ def pick_seat():
 
 @user_app.route('/summary', methods=['GET', 'POST'])
 def summary():
-    if 'user_id' not in session:
-        return redirect("http://localhost:8001/login")
+    token = request.cookies.get('token')
+    
+    if not token:
+        return redirect("http://localhost:8000/login")
+    
+    user_id = verify_token(token)
+    
+    if not user_id:
+        return redirect("http://localhost:8000/login")
 
     if request.method == 'POST':
         id_filmu = request.form['id_filmu']
@@ -265,15 +290,22 @@ def summary():
         total_cost = sum(18 if ticket == 'ulgowy' else 24 for ticket in ticket_types)
 
         return render_template('summary.html', id_filmu=id_filmu, id_kina=id_kina, date=date, time=time, seat_details=seat_details, total_cost=total_cost, film_name=film_name, cinema_name=cinema_name, id_seansu=id_seansu)
+    
     return redirect("http://localhost:8000")
 
 
 @user_app.route('/payment', methods=['POST'])
 def payment():
-    if 'user_id' not in session:
-        return redirect("http://localhost:8001/login")
+    token = request.cookies.get('token')
+    
+    if not token:
+        return redirect("http://localhost:8000/login")
+    
+    user_id = verify_token(token)
+    
+    if not user_id:
+        return redirect("http://localhost:8000/login")
 
-    user_id = session['user_id']
     id_seansu = request.form['id_seansu']
     rows = request.form.getlist('rows[]')
     seats = request.form.getlist('seats[]')
@@ -312,8 +344,6 @@ def payment():
             )
 
         conn.commit()
-        session['reservation_id'] = reservation_id  # Store reservation ID in session
-        session['seat_details'] = seat_details  # Store seat details in session
     except mysql.connector.Error as err:
         conn.rollback()
         return render_template('error.html', message=f"Database error: {err}")
@@ -321,13 +351,20 @@ def payment():
         cur.close()
         conn.close()
 
-    return render_template('payment.html', reservation_id=reservation_id, seat_details=seat_details, total_cost=total_cost)
+    return redirect(url_for('success', reservation_id=reservation_id, total_cost=total_cost))
 
 
 @user_app.route('/payment/confirmation', methods=['POST'])
 def payment_confirmation():
-    if 'user_id' not in session:
-        return redirect("http://localhost:8001/login")
+    token = request.cookies.get('token')
+    
+    if not token:
+        return redirect("http://localhost:8000/login")
+    
+    user_id = verify_token(token)
+    
+    if not user_id:
+        return redirect("http://localhost:8000/login")
     
     reservation_id = request.form['reservation_id']
     confirmation = request.form['confirmation']
@@ -354,12 +391,22 @@ def payment_confirmation():
             conn.rollback()
             return redirect(url_for('failure'))
 
+
 @user_app.route('/payment/success')
 def success():
-    if 'user_id' not in session:
-        return redirect("http://localhost:8001/login")
+    token = request.cookies.get('token')
+    
+    if not token:
+        return redirect("http://localhost:8000/login")
+    
+    user_id = verify_token(token)
+    
+    if not user_id:
+        return redirect("http://localhost:8000/login")
+    
+    reservation_id = request.args.get('reservation_id')
+    total_cost = request.args.get('total_cost')
 
-    reservation_id = session.get('reservation_id')
     if not reservation_id:
         return "Nie znaleziono rezerwacji", 404
 
@@ -403,7 +450,9 @@ def success():
     img_buffer.seek(0)
     qr_data_url = f"data:image/png;base64,{base64.b64encode(img_buffer.read()).decode()}"
 
-    return render_template('success.html', reservation=reservation, seat_details=seat_details, qr_data_url=qr_data_url)
+    return render_template('success.html', reservation=reservation, seat_details=seat_details, qr_data_url=qr_data_url, total_cost=total_cost)
+
+
 
 @user_app.route('/payment/failure')
 def failure():
