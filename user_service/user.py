@@ -351,7 +351,7 @@ def payment():
         cur.close()
         conn.close()
 
-    return redirect(url_for('success', reservation_id=reservation_id, total_cost=total_cost))
+    return render_template('payment.html', reservation_id=reservation_id, seat_details=seat_details, total_cost=total_cost)
 
 
 @user_app.route('/payment/confirmation', methods=['POST'])
