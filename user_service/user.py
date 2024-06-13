@@ -350,8 +350,11 @@ def payment():
     finally:
         cur.close()
         conn.close()
-
+        
+        
     return render_template('payment.html', reservation_id=reservation_id, seat_details=seat_details, total_cost=total_cost)
+
+    # return redirect(url_for('success', reservation_id=reservation_id, total_cost=total_cost))
 
 
 @user_app.route('/payment/confirmation', methods=['POST'])
@@ -377,7 +380,7 @@ def payment_confirmation():
             cur.execute("INSERT INTO platnosc (id_rezerwacji, kwota, czas_rozpoczecia) VALUES (%s, %s, NOW())",
                         (reservation_id, request.form['total_cost']))
             conn.commit()
-            return redirect(url_for('success'))
+            return redirect(url_for('success', reservation_id=reservation_id))
         except mysql.connector.Error as err:
             conn.rollback()
             return redirect(url_for('failure'))
