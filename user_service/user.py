@@ -191,8 +191,9 @@ def pick_time():
     conn.close()
 
     return render_template('book_time.html', id_filmu=id_filmu, id_kina=id_kina, date=date, available_times=available_times)
-@user_app.route('/book/seats', methods=['POST'])
-def pick_seat():
+
+@user_app.route('/book/sala', methods=['POST'])
+def pick_sala():
     id_filmu = request.form['id_filmu']
     id_kina = request.form['id_kina']
     date = request.form['date']
@@ -201,26 +202,57 @@ def pick_seat():
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor()
 
+    query = '''
+        SELECT s.nazwa
+        FROM sala s
+        JOIN kino k ON s.id_kina = k.id_kina
+        JOIN seans se ON s.id_sali = se.id_sali
+        WHERE s.id_kina = %s AND se.data_seansu = %s AND se.godzina = %s;
+    '''
+
+    cur.execute(query, (id_kina, date, time ))
+
+    rows = cur.fetchall()
+    available_salas = [row[0] for row in rows]
+
+    cur.close()
+    conn.close()
+
+    return render_template('book_sala.html', id_filmu=id_filmu, id_kina=id_kina, date=date, time=time, available_salas=available_salas)
+
+@user_app.route('/book/seats', methods=['POST'])
+def pick_seat():
+    id_filmu = request.form['id_filmu']
+    id_kina = request.form['id_kina']
+    date = request.form['date']
+    time = request.form['time']
+    sala = request.form['sala']
+
+
+    conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
+    cur = conn.cursor()
+    query = """ SELECT id_sali FROM sala WHERE id_kina = %s AND nazwa = %s; """
+    cur.execute(query, (id_kina, sala))
+    sala_id = cur.fetchone()[0]
     # Fetch reserved seats
     query = """
         SELECT z.rzad, z.numer
         FROM zajete_miejsce z
         JOIN rezerwacja r ON z.id_rezerwacji = r.id_rezerwacji
         JOIN seans s ON r.id_seansu = s.id_seansu
-        WHERE s.id_filmu = %s AND s.data_seansu = %s AND s.godzina = %s;
+        WHERE s.id_filmu = %s AND s.data_seansu = %s AND s.godzina = %s AND s.id_sali = %s;
     """
-    cur.execute(query, (id_filmu, date, time))
+    cur.execute(query, (id_filmu, date, time, sala_id))
     rows = cur.fetchall()
     reserved_seats = [(row[0], row[1]) for row in rows]
 
     # Fetch the number of seats
     sala_query = """
-        SELECT sa.ilosc_miejsc
-        FROM sala sa
-        JOIN seans s ON sa.id_sali = s.id_sali
-        WHERE s.id_filmu = %s AND s.data_seansu = %s AND s.godzina = %s;
+        SELECT ilosc_miejsc
+        FROM sala 
+        WHERE id_sali = %s ;
     """
-    cur.execute(sala_query, (id_filmu, date, time))
+    cur.execute(sala_query, (sala_id,))
     ilosc_miejsc = cur.fetchone()[0]
     rows_count = (ilosc_miejsc + 9) // 10
 
@@ -238,12 +270,13 @@ def pick_seat():
     cur.close()
     conn.close()
 
-    return render_template('book_seats.html', id_filmu=id_filmu, id_kina=id_kina, date=date, time=time, all_seats=all_seats)
+    return render_template('book_seats.html', id_filmu=id_filmu, id_kina=id_kina, date=date, time=time, all_seats=all_seats, sala_id=sala_id)
 
 @user_app.route('/summary', methods=['GET', 'POST'])
 def summary():
     token = request.cookies.get('token')
-    
+
+
     if not token:
         return redirect("http://localhost:8000/login")
     
@@ -257,9 +290,11 @@ def summary():
         id_kina = request.form['id_kina']
         date = request.form['date']
         time = request.form['time']
+        sala_id = request.form['sala_id']
         rows = request.form.getlist('rows[]')
         seats = request.form.getlist('seats[]')
         ticket_types = request.form.getlist('ticket_types[]')
+        
 
         conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
         cur = conn.cursor()
@@ -274,8 +309,8 @@ def summary():
         # Fetch the id_seansu
         cur.execute("""
             SELECT id_seansu FROM seans 
-            WHERE id_filmu = %s AND data_seansu = %s AND godzina = %s
-        """, (id_filmu, date, time))
+            WHERE id_filmu = %s AND data_seansu = %s AND godzina = %s AND id_sali = %s
+        """, (id_filmu, date, time, sala_id))
         id_seansu = cur.fetchone()
         if id_seansu is None:
             cur.close()
