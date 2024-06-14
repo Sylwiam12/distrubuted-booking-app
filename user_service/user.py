@@ -49,12 +49,12 @@ def user_information():
     token = request.cookies.get('token')
     
     if not token:
-        return redirect("http://localhost:8001/login")
+        return redirect("http://localhost:8000/login")
     
     user_id = verify_token(token)
     
     if not user_id:
-        return redirect("http://localhost:8001/login")
+        return redirect("http://localhost:8000/login")
     
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor(dictionary=True)
