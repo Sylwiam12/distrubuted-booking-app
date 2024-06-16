@@ -17,7 +17,6 @@ from token_utils import *
 auth_app = Flask(__name__)
 auth_app.config.from_pyfile('config.py')
 
-auth_app.secret_key = SECRET_KEY  # Ensure SECRET_KEY is set
 conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
 cur = conn.cursor()
 conn.commit()
@@ -51,26 +50,11 @@ start_scheduler()
 @auth_app.route('/')
 def home():
     token = request.cookies.get('token')
-    user_access = None
+    user = None
     admin = None
-
     if token:
-        try:
-            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-            user_id = payload.get('user_id')
-            is_admin = payload.get('is_admin')
-            
-            if is_admin:
-                admin = True
-            else:
-                user_access = True
-
-        except jwt.ExpiredSignatureError:
-            pass
-        except jwt.InvalidTokenError:
-            pass
-
-    return render_template('index.html', user=user_access, admin=admin)
+        user, admin = verify_token(token)
+    return render_template('home.html', user=user, admin=admin)
 
 @auth_app.route('/register/', methods=['GET', 'POST'])
 def register():
@@ -132,7 +116,7 @@ def login():
         if user_db:
             if check_password_hash(user_db['haslo'], password_login):
                 token = generate_token(user_db['id_uzytkownika'], user_db['czy_admin'])
-                response = make_response(redirect(url_for('home')))  # Redirect to home page
+                response = make_response(redirect(url_for('home')))
                 response.set_cookie('token', token, httponly=True, secure=True)
                 return response
 
