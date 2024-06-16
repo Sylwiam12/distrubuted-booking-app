@@ -1,48 +1,18 @@
-from flask import Flask, Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash
 from forms import *
 from flask_mail import Mail, Message
 import mysql.connector
-from config import host, database, user, password
+from config import host, database, user, password, JWT_SECRET_KEY, JWT_ALGORITHM
 import qrcode
 import base64
 from io import BytesIO
-from flask import send_file, session, redirect, url_for
-from PIL import Image, ImageDraw, ImageFont
 import jwt
-
-JWT_SECRET_KEY = 'your_jwt_secret_key'
-JWT_ALGORITHM = 'HS256'
+from token_utils import *
 
 user_app = Flask(__name__)
-
+user_app.config.from_pyfile('config.py')
 mail = Mail(user_app)
 
-def verify_token(token):
-    try:
-        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        return payload['user_id']
-    except jwt.ExpiredSignatureError:
-        return None
-    except jwt.InvalidTokenError:
-        return None
-    
-@user_app.route('/contact', methods=['GET','POST'])
-def contact():
-    form = SendEmail(request.form)
-    if request.method == 'POST' and form.validate():
-        name = form.name.data
-        email = form.email.data
-        topic = form.topic.data
-        text = form.text.data
-        
-        msg = Message(subject=topic,
-                      sender='kino_111@outlook.com',
-                      recipients=['kino_111@outlook.com'])
-        msg.body = f"From: {name}\nEmail: {email}\nMessage: {text}"
-        mail.send(msg)
-
-        flash('Your message has been sent successfully!', 'success')
-    return render_template('contact.html', form=SendEmail())
 
 @user_app.route('/user_information')
 def user_information():
@@ -51,7 +21,7 @@ def user_information():
     if not token:
         return redirect("http://localhost:8000/login")
     
-    user_id = verify_token(token)
+    user_id = verify_token(token)[0]
     
     if not user_id:
         return redirect("http://localhost:8000/login")
@@ -280,7 +250,7 @@ def summary():
     if not token:
         return redirect("http://localhost:8000/login")
     
-    user_id = verify_token(token)
+    user_id = verify_token(token)[0]
     
     if not user_id:
         return redirect("http://localhost:8000/login")
@@ -336,7 +306,7 @@ def payment():
     if not token:
         return redirect("http://localhost:8000/login")
     
-    user_id = verify_token(token)
+    user_id = verify_token(token)[0]
     
     if not user_id:
         return redirect("http://localhost:8000/login")
@@ -399,7 +369,7 @@ def payment_confirmation():
     if not token:
         return redirect("http://localhost:8000/login")
     
-    user_id = verify_token(token)
+    user_id = verify_token(token)[0]
     
     if not user_id:
         return redirect("http://localhost:8000/login")
@@ -437,8 +407,8 @@ def success():
     if not token:
         return redirect("http://localhost:8000/login")
     
-    user_id = verify_token(token)
-    
+    user_id = verify_token(token)[0]
+
     if not user_id:
         return redirect("http://localhost:8000/login")
     
@@ -496,5 +466,30 @@ def success():
 def failure():
     return render_template('failure.html')
 
+@user_app.route('/contact', methods=['GET', 'POST'])
+def contact():
+    form = SendEmail(request.form)
+    if request.method == 'POST' and form.validate():
+        name = form.name.data
+        email = form.email.data
+        topic = form.topic.data
+        text = form.text.data
+
+        msg = Message(
+            subject=topic,
+            sender=user_app.config['MAIL_USERNAME'],
+            recipients=[user_app.config['MAIL_USERNAME']]
+        )
+        msg.body = f"From: {name}\nEmail: {email}\nMessage: {text}"
+
+        try:
+            mail.send(msg)
+            flash('Your message has been sent successfully!', 'success')
+        except Exception as e:
+            flash('Failed to send your message. Please try again later.', 'error')
+
+    return render_template('contact.html', form=form)
+
+
 if __name__ == '__main__': 
-    user_app.run(debug=True,host="0.0.0.0", port=8002) 
+    user_app.run(debug=True) 

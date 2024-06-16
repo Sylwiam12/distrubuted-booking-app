@@ -1,4 +1,4 @@
-version: '3'
+version: '3.9'
 services:
   auth-service:
     build:
@@ -9,8 +9,7 @@ services:
       - "8000:8000"
     environment:
       - FLASK_APP=auth
-    
-
+      
   admin-service:
     build:
       context: ./admin_service
@@ -20,6 +19,7 @@ services:
       - "8002:8000"
     environment:
       - FLASK_APP=admin
+
     depends_on:
       - auth-service
 
@@ -34,3 +34,4 @@ services:
       - FLASK_APP=user
     depends_on:
       - auth-service    
+  

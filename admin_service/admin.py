@@ -1,10 +1,15 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
 import mysql.connector
 import bcrypt
 from config import host, database, user, password
+from werkzeug.security import generate_password_hash
 import datetime
+from functools import wraps
+from flask import request, redirect, url_for
 
 admin_app = Flask(__name__)
+admin_app.config.from_pyfile('config.py')
+
 
 @admin_app.route('/movie')
 def movies():
@@ -193,20 +198,27 @@ def add_admin():
     mail = request.form['mail']
     haslo = request.form['haslo']
     
-    hashed_password = bcrypt.hashpw(haslo.encode('utf-8'), bcrypt.gensalt())
+    # Hash the password
+    hashed_password = generate_password_hash(haslo, method='pbkdf2:sha256')
     
+    # Connect to the database
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor()
     
-    cur.execute('''INSERT INTO uzytkownik (imie, nazwisko, mail, haslo, czy_admin) VALUES (%s, %s, %s, %s, %s)''',
-                (imie, nazwisko, mail, hashed_password, 1))
-    
-    conn.commit()
-    cur.close()
-    conn.close()
+    try:
+        # Insert new admin details into the database
+        cur.execute('''INSERT INTO uzytkownik (imie, nazwisko, mail, haslo, czy_admin) VALUES (%s, %s, %s, %s, %s)''',
+                    (imie, nazwisko, mail, hashed_password, 1))
+        conn.commit()
+        flash('Admin added successfully!', 'success')
+    except mysql.connector.Error as err:
+        conn.rollback()
+        flash(f"Error: {err}", 'error')
+    finally:
+        cur.close()
+        conn.close()
     
     return redirect(url_for('users'))
-
 @admin_app.route('/remove_admin', methods=['POST'])
 def remove_admin():
     id_klienta = request.form['id_klienta']
@@ -447,4 +459,4 @@ def delete_seans():
     return redirect(url_for('seanse'))
 
 if __name__ == '__main__': 
-    admin_app.run(debug=True, host="0.0.0.0", port=8003) 
+    admin_app.run(debug=True) 
