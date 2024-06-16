@@ -54,7 +54,7 @@ def home():
     admin = None
     if token:
         user, admin = verify_token(token)
-    return render_template('home.html', user=user, admin=admin)
+    return render_template('index.html', user=user, admin=admin)
 
 @auth_app.route('/register/', methods=['GET', 'POST'])
 def register():
