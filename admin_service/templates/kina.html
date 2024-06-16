@@ -101,7 +101,7 @@
         function toggleSalaDetails(kinoId) {
             const detailsRow = document.getElementById(`details-${kinoId}`);
             if (detailsRow.style.display === 'none') {
-                fetch(`/get_sala/${kinoId}`)
+                fetch(`/admin/get_sala/${kinoId}`)
                     .then(response => response.json())
                     .then(data => {
                         let detailsHtml = '<tr><th>ID Sali</th><th>Nazwa Sali</th><th>Ilość Miejsc</th><th class="actions-header">Akcje</th></tr>';
@@ -141,7 +141,7 @@
         }
 
         function showTimes(salaId, date) {
-            fetch(`/get_availability/${salaId}/${date}`)
+            fetch(`/admin/get_availability/${salaId}/${date}`)
                 .then(response => response.json())
                 .then(data => {
                     let timesHtml = 'Dostępne godziny:<ul>';
@@ -165,7 +165,7 @@
         }
 
         function fetchCinemas() {
-            fetch('/get_cinemas')
+            fetch('/admin/get_cinemas')
                 .then(response => response.json())
                 .then(data => {
                     let cinemaOptions = '<option value="">Wybierz kino</option>';
@@ -177,7 +177,7 @@
         }
 
         function fetchSalas(cinemaId) {
-            fetch(`/get_sala/${cinemaId}`)
+            fetch(`/admin/get_sala/${cinemaId}`)
                 .then(response => response.json())
                 .then(data => {
                     let salaOptions = '<option value="">Wybierz salę</option>';
@@ -192,7 +192,7 @@
             const salaId = document.getElementById('salaSelect').value;
             const date = document.getElementById('dateSelect').value;
             if (salaId && date) {
-                fetch(`/add_availability`, {
+                fetch(`/admin/add_availability`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -244,7 +244,7 @@
             </tbody>
         </table>
         <button onclick="openModal()">Dodaj dostępność</button>
-        <a href="http://127.0.0.1:8000/" class="back-button">Powrót</a>
+        <a href="/home" class="back-button">Powrót</a>
     </div>
     <div id="availabilityModal" class="modal">
         <div class="modal-content">

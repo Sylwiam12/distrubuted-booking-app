@@ -9,7 +9,7 @@ services:
       - "8000:8000"
     environment:
       - FLASK_APP=auth
-      
+
   admin-service:
     build:
       context: ./admin_service
@@ -19,7 +19,6 @@ services:
       - "8002:8000"
     environment:
       - FLASK_APP=admin
-
     depends_on:
       - auth-service
 
@@ -33,5 +32,16 @@ services:
     environment:
       - FLASK_APP=user
     depends_on:
-      - auth-service    
-  
+      - auth-service
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - auth-service
+      - admin-service
+      - user-service

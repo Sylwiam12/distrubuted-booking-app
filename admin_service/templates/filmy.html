@@ -116,7 +116,7 @@
     </div>
     <div class="add-movie-form">
         <h2>Dodaj film</h2> 
-        <form action="/add_movie" method="post"> 
+        <form action="/admin/add_movie" method="post"> 
             <input type="text" name="tytul" placeholder="tytul"> 
             <input type="text" name="gatunek" placeholder="gatunek"> 
             <input type="text" name="rezyser" placeholder="rezyser"> 
@@ -166,7 +166,7 @@
     }
 
     function goBack() {
-        window.location.href = 'http://127.0.0.1:8000';  
+        window.location.href = '/home';  
     }
 
     function navigate(route) {

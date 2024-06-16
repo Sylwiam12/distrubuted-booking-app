@@ -113,7 +113,7 @@
                 <td>{{ row[4] }}</td>
                 <td>{{ row[5] }}</td>
                 <td class="delete-icon">
-                    <form action="/delete_seans" method="post" class="delete-form" style="display: none;">
+                    <form action="/admin/delete_seans" method="post" class="delete-form" style="display: none;">
                         <input type="hidden" name="id_seansu" value="{{ row[0] }}">
                         <button type="submit">❌</button>
                     </form>
@@ -128,7 +128,7 @@
     <div class="modal-content">
         <span class="close">&times;</span>
         <h2>Dodaj Seans</h2>
-        <form id="addSeansForm" method="post" action="/dodaj_seans">
+        <form id="addSeansForm" method="post" action="/admin/dodaj_seans">
             <label for="film">Film:</label>
             <select name="film" id="film"></select>
             <br>
@@ -166,7 +166,7 @@
     }
 
     function loadDropdowns() {
-        fetch('/available_movies')
+        fetch('/admin/available_movies')
         .then(response => response.json())
         .then(data => {
             const filmSelect = document.getElementById('film');
@@ -180,7 +180,7 @@
             });
         });
 
-        fetch('/available_cinemas')
+        fetch('/admin/available_cinemas')
         .then(response => response.json())
         .then(data => {
             const kinoSelect = document.getElementById('kino');
@@ -196,7 +196,7 @@
 
     document.getElementById('kino').onchange = function() {
         const kinoId = this.value;
-        fetch(`/available_halls?kino_id=${kinoId}`)
+        fetch(`/admin/available_halls?kino_id=${kinoId}`)
         .then(response => response.json())
         .then(data => {
             const salaSelect = document.getElementById('sala');
@@ -223,7 +223,7 @@
         const date = document.getElementById('data').value;
         const filmId = document.getElementById('film').value;
         if (salaId && date && filmId) {
-            fetch(`/available_times?sala_id=${salaId}&date=${date}&film_id=${filmId}`)
+            fetch(`/admin/available_times?sala_id=${salaId}&date=${date}&film_id=${filmId}`)
             .then(response => response.json())
             .then(data => {
                 const godzinaSelect = document.getElementById('godzina');
@@ -251,7 +251,7 @@
     }
 
     function goBack() {
-        window.location.href = 'http://127.0.0.1:8000/';
+        window.location.href = '/home';
     }
 </script>
 </body> 

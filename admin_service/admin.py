@@ -11,7 +11,7 @@ admin_app = Flask(__name__)
 admin_app.config.from_pyfile('config.py')
 
 
-@admin_app.route('/movie')
+@admin_app.route('/admin/movie')
 def movies():
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor() 
@@ -22,7 +22,7 @@ def movies():
   
     return render_template('filmy.html', data=data)
  
-@admin_app.route('/add_movie', methods=['POST'])
+@admin_app.route('/admin/add_movie', methods=['POST'])
 def add_movie():
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor() 
@@ -42,7 +42,7 @@ def add_movie():
   
     return redirect(url_for('movies'))
 
-@admin_app.route('/delete_movie', methods=['POST']) 
+@admin_app.route('/admin/delete_movie', methods=['POST']) 
 def delete(): 
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor() 
@@ -58,7 +58,7 @@ def delete():
     return redirect(url_for('movies')) 
   
   
-@admin_app.route('/update_movie', methods=['POST']) 
+@admin_app.route('/admin/update_movie', methods=['POST']) 
 def update(): 
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor() 
@@ -78,7 +78,7 @@ def update():
     return redirect(url_for('movies')) 
   
   
-@admin_app.route('/kina')
+@admin_app.route('/admin/kina')
 def cinemas():
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor()
@@ -88,7 +88,7 @@ def cinemas():
     conn.close()
     return render_template('kina.html', data=data)
 
-@admin_app.route('/get_sala/<int:kino_id>')
+@admin_app.route('/admin/get_sala/<int:kino_id>')
 def get_sala(kino_id):
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor()
@@ -98,7 +98,7 @@ def get_sala(kino_id):
     conn.close()
     return jsonify(data)
 
-@admin_app.route('/get_availability/<int:sala_id>/<date>')
+@admin_app.route('/admin/get_availability/<int:sala_id>/<date>')
 def get_availability(sala_id, date):
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor()
@@ -109,7 +109,7 @@ def get_availability(sala_id, date):
     available_times = [str(time[0]) for time in data]
     return jsonify(available_times)
 
-@admin_app.route('/get_cinemas')
+@admin_app.route('/admin/get_cinemas')
 def get_cinemas():
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor()
@@ -119,7 +119,7 @@ def get_cinemas():
     conn.close()
     return jsonify(data)
 
-@admin_app.route('/add_availability', methods=['POST'])
+@admin_app.route('/admin/add_availability', methods=['POST'])
 def add_availability():
     req_data = request.get_json()
     sala_id = req_data['salaId']
@@ -176,7 +176,7 @@ def add_availability():
     return jsonify({'success': success, 'messages': messages})
 
 
-@admin_app.route('/uzytkownicy')
+@admin_app.route('/admin/uzytkownicy')
 def users():
 
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password) 
@@ -191,22 +191,18 @@ def users():
   
     return render_template('uzytkownicy.html', admins=admins, users=users)
 
-@admin_app.route('/add_admin', methods=['POST'])
+@admin_app.route('/admin/add_admin', methods=['POST'])
 def add_admin():
     imie = request.form['imie']
     nazwisko = request.form['nazwisko']
     mail = request.form['mail']
     haslo = request.form['haslo']
     
-    # Hash the password
     hashed_password = generate_password_hash(haslo, method='pbkdf2:sha256')
-    
-    # Connect to the database
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor()
     
     try:
-        # Insert new admin details into the database
         cur.execute('''INSERT INTO uzytkownik (imie, nazwisko, mail, haslo, czy_admin) VALUES (%s, %s, %s, %s, %s)''',
                     (imie, nazwisko, mail, hashed_password, 1))
         conn.commit()
@@ -219,7 +215,8 @@ def add_admin():
         conn.close()
     
     return redirect(url_for('users'))
-@admin_app.route('/remove_admin', methods=['POST'])
+
+@admin_app.route('/admin/remove_admin', methods=['POST'])
 def remove_admin():
     id_klienta = request.form['id_klienta']
     
@@ -234,7 +231,7 @@ def remove_admin():
     
     return redirect(url_for('users'))
 
-@admin_app.route('/seanse')
+@admin_app.route('/admin/seanse')
 def seanse():
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor()
@@ -254,7 +251,7 @@ def seanse():
     
     return render_template('seansy.html', data=data)
 
-@admin_app.route('/available_movies')
+@admin_app.route('/admin/available_movies')
 def available_movies():
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor()
@@ -267,7 +264,7 @@ def available_movies():
     
     return jsonify(movies)
 
-@admin_app.route('/available_cinemas')
+@admin_app.route('/admin/available_cinemas')
 def available_cinemas():
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor()
@@ -280,7 +277,7 @@ def available_cinemas():
     
     return jsonify(cinemas)
 
-@admin_app.route('/available_halls')
+@admin_app.route('/admin/available_halls')
 def available_halls():
     kino_id = request.args.get('kino_id')
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
@@ -294,7 +291,7 @@ def available_halls():
     
     return jsonify(halls)
 
-@admin_app.route('/available_times')
+@admin_app.route('/admin/available_times')
 def available_times():
     sala_id = request.args.get('sala_id')
     date = request.args.get('date')
@@ -339,7 +336,7 @@ from flask import request, render_template, redirect, url_for
 import mysql.connector
 from mysql.connector import Error
 
-@admin_app.route('/dodaj_seans', methods=['POST'])
+@admin_app.route('/admin/dodaj_seans', methods=['POST'])
 def dodaj_seans():
     film_id = request.form['film']
     sala_id = request.form['sala']
@@ -403,7 +400,7 @@ def dodaj_seans():
 
 
 
-@admin_app.route('/delete_seans', methods=['POST'])
+@admin_app.route('/admin/delete_seans', methods=['POST'])
 def delete_seans():
     id_seansu = request.form['id_seansu']
     
@@ -419,7 +416,6 @@ def delete_seans():
     if seans_info:
         film_id, sala_id, date, time = seans_info
 
-        # Convert time to string if it is a datetime object
         if isinstance(time, datetime.timedelta):
             total_seconds = int(time.total_seconds())
             hours = total_seconds // 3600
@@ -428,15 +424,12 @@ def delete_seans():
         elif isinstance(time, datetime.time):
             time = time.strftime("%H:%M")
 
-        # Delete the seans
         cur.execute('DELETE FROM seans WHERE id_seansu = %s', (id_seansu,))
         
-        # Get the movie duration
         cur.execute('SELECT czas_trwania FROM film WHERE id_filmu = %s', (film_id,))
         duration = cur.fetchone()[0]
         duration_in_minutes = duration  # assuming czas_trwania is in minutes
 
-        # Calculate time slots to be re-added to dostepnosc_sali
         start_hour, start_minute = map(int, time.split(':'))
         interval = 15  # minutes
 

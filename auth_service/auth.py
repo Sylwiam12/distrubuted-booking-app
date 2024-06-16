@@ -47,16 +47,21 @@ def start_scheduler():
 
 start_scheduler()
 
-@auth_app.route('/')
+@auth_app.route('/home/')
 def home():
     token = request.cookies.get('token')
-    user = None
-    admin = None
+    is_user = None
+    is_admin = None
     if token:
         user, admin = verify_token(token)
-    return render_template('index.html', user=user, admin=admin)
+        if admin == 1:
+            is_admin = True
+        else:
+            is_user = True
 
-@auth_app.route('/register/', methods=['GET', 'POST'])
+    return render_template('index.html', user=is_user, admin=is_admin)
+
+@auth_app.route('/home/register/', methods=['GET', 'POST'])
 def register():
     form = SignupForm(request.form)
     
@@ -100,7 +105,7 @@ def register():
     return render_template('register.html', form=form)
 
 
-@auth_app.route('/login/', methods=['GET', 'POST'])
+@auth_app.route('/home/login/', methods=['GET', 'POST'])
 def login():
     form = SigninForm(request.form)
 
@@ -130,7 +135,7 @@ def login():
 
     return render_template('login.html', form=form)
 
-@auth_app.route('/logout/')
+@auth_app.route('/home/logout/')
 def logout():
     response = make_response(redirect(url_for('home')))
     response.set_cookie('token', '', expires=0)

@@ -14,17 +14,17 @@ user_app.config.from_pyfile('config.py')
 mail = Mail(user_app)
 
 
-@user_app.route('/user_information')
+@user_app.route('/user/user_information')
 def user_information():
     token = request.cookies.get('token')
     
     if not token:
-        return redirect("http://localhost:8000/login")
+        return redirect("/home/login")
     
     user_id = verify_token(token)[0]
     
     if not user_id:
-        return redirect("http://localhost:8000/login")
+        return redirect("/home/login")
     
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor(dictionary=True)
@@ -56,7 +56,7 @@ def user_information():
 
 
 
-@user_app.route('/catalog/')
+@user_app.route('/user/catalog/')
 def catalog():
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor()
@@ -81,7 +81,7 @@ def catalog():
     
     return render_template('catalog.html', films=films)
 
-@user_app.route('/book/')
+@user_app.route('/user/book/')
 def book_filmy():
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor()
@@ -106,7 +106,7 @@ def book_filmy():
     
     return render_template('book_filmy.html', films=films)
 
-@user_app.route('/book/cinema', methods=['POST'])
+@user_app.route('/user/book/cinema', methods=['POST'])
 def pick_cinema():
     id_filmu = request.form['id_filmu']
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
@@ -127,7 +127,7 @@ def pick_cinema():
     
     return render_template('book_cinema.html', id_filmu=id_filmu, kina=kina)
 
-@user_app.route('/book/date', methods=['POST'])
+@user_app.route('/user/book/date', methods=['POST'])
 def pick_date():
     id_filmu = request.form['id_filmu']
     id_kina = request.form['id_kina']
@@ -143,7 +143,7 @@ def pick_date():
 
     return render_template('book_date.html', id_filmu=id_filmu, id_kina=id_kina, available_dates=available_dates)
 
-@user_app.route('/book/time', methods=['POST'])
+@user_app.route('/user/book/time', methods=['POST'])
 def pick_time():
     id_filmu = request.form['id_filmu']
     id_kina = request.form['id_kina']
@@ -162,7 +162,7 @@ def pick_time():
 
     return render_template('book_time.html', id_filmu=id_filmu, id_kina=id_kina, date=date, available_times=available_times)
 
-@user_app.route('/book/sala', methods=['POST'])
+@user_app.route('/user/book/sala', methods=['POST'])
 def pick_sala():
     id_filmu = request.form['id_filmu']
     id_kina = request.form['id_kina']
@@ -190,7 +190,7 @@ def pick_sala():
 
     return render_template('book_sala.html', id_filmu=id_filmu, id_kina=id_kina, date=date, time=time, available_salas=available_salas)
 
-@user_app.route('/book/seats', methods=['POST'])
+@user_app.route('/user/book/seats', methods=['POST'])
 def pick_seat():
     id_filmu = request.form['id_filmu']
     id_kina = request.form['id_kina']
@@ -242,18 +242,18 @@ def pick_seat():
 
     return render_template('book_seats.html', id_filmu=id_filmu, id_kina=id_kina, date=date, time=time, all_seats=all_seats, sala_id=sala_id)
 
-@user_app.route('/summary', methods=['GET', 'POST'])
+@user_app.route('/user/summary', methods=['GET', 'POST'])
 def summary():
     token = request.cookies.get('token')
 
 
     if not token:
-        return redirect("http://localhost:8000/login")
+        return redirect("/home/login")
     
     user_id = verify_token(token)[0]
     
     if not user_id:
-        return redirect("http://localhost:8000/login")
+        return redirect("/home/login")
 
     if request.method == 'POST':
         id_filmu = request.form['id_filmu']
@@ -285,7 +285,7 @@ def summary():
         if id_seansu is None:
             cur.close()
             conn.close()
-            return "Seans not found", 404
+            return "Nie znaleziono seansu", 404
         id_seansu = id_seansu[0]
 
         cur.close()
@@ -296,20 +296,20 @@ def summary():
 
         return render_template('summary.html', id_filmu=id_filmu, id_kina=id_kina, date=date, time=time, seat_details=seat_details, total_cost=total_cost, film_name=film_name, cinema_name=cinema_name, id_seansu=id_seansu)
     
-    return redirect("http://localhost:8000")
+    return redirect("/home")
 
 
-@user_app.route('/payment', methods=['POST'])
+@user_app.route('/user/payment', methods=['POST'])
 def payment():
     token = request.cookies.get('token')
     
     if not token:
-        return redirect("http://localhost:8000/login")
+        return redirect("/home/login")
     
     user_id = verify_token(token)[0]
     
     if not user_id:
-        return redirect("http://localhost:8000/login")
+        return redirect("/home/login")
 
     id_seansu = request.form['id_seansu']
     rows = request.form.getlist('rows[]')
@@ -342,7 +342,7 @@ def payment():
         )
         reservation_id = cur.lastrowid
 
-        for row, seat, ticket in seat_details:
+        for row, seat, _ in seat_details:
             cur.execute(
                 "INSERT INTO zajete_miejsce (id_rezerwacji, rzad, numer) VALUES (%s, %s, %s)",
                 (reservation_id, row, seat)
@@ -362,17 +362,17 @@ def payment():
     # return redirect(url_for('success', reservation_id=reservation_id, total_cost=total_cost))
 
 
-@user_app.route('/payment/confirmation', methods=['POST'])
+@user_app.route('/user/payment/confirmation', methods=['POST'])
 def payment_confirmation():
     token = request.cookies.get('token')
     
     if not token:
-        return redirect("http://localhost:8000/login")
+        return redirect("/user/login")
     
     user_id = verify_token(token)[0]
     
     if not user_id:
-        return redirect("http://localhost:8000/login")
+        return redirect("/user/login")
     
     reservation_id = request.form['reservation_id']
     confirmation = request.form['confirmation']
@@ -400,17 +400,17 @@ def payment_confirmation():
             return redirect(url_for('failure'))
 
 
-@user_app.route('/payment/success')
+@user_app.route('/user/payment/success')
 def success():
     token = request.cookies.get('token')
     
     if not token:
-        return redirect("http://localhost:8000/login")
+        return redirect("/home/login")
     
     user_id = verify_token(token)[0]
 
     if not user_id:
-        return redirect("http://localhost:8000/login")
+        return redirect("/home/login")
     
     reservation_id = request.args.get('reservation_id')
     total_cost = request.args.get('total_cost')
@@ -462,11 +462,11 @@ def success():
 
 
 
-@user_app.route('/payment/failure')
+@user_app.route('/user/payment/failure')
 def failure():
     return render_template('failure.html')
 
-@user_app.route('/contact', methods=['GET', 'POST'])
+@user_app.route('/user/contact', methods=['GET', 'POST'])
 def contact():
     form = SendEmail(request.form)
     if request.method == 'POST' and form.validate():

@@ -182,7 +182,7 @@
     <div class="popup" id="popup">
         <div class="popup-content">
             <h2>Dodaj Admina</h2>
-            <form action="/add_admin" method="post">
+            <form action="/admin/add_admin" method="post">
                 <label for="imie">Imię:</label>
                 <input type="text" id="imie" name="imie" required>
                 <label for="nazwisko">Nazwisko:</label>
@@ -202,7 +202,7 @@
     <div class="popup" id="confirmPopup">
         <div class="popup-content">
             <h2>Jesteś pewny, że chcesz usunąć tego admina?</h2>
-            <form id="removeAdminForm" action="/remove_admin" method="post">
+            <form id="removeAdminForm" action="/admin/remove_admin" method="post">
                 <input type="hidden" id="removeAdminId" name="id_klienta">
                 <input type="submit" value="Tak">
                 <button type="button" class="close-btn" onclick="closeConfirmPopup()">Nie</button>
@@ -230,7 +230,7 @@
     }
 
     function goHome() {
-        window.location.href = "http://127.0.0.1:8000/";
+        window.location.href = "/home";
     }
 </script>
 </body>
