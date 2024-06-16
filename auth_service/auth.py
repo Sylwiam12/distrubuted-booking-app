@@ -53,7 +53,7 @@ def home():
     is_user = None
     is_admin = None
     if token:
-        user, admin = verify_token(token)
+        _, admin = verify_token(token)
         if admin == 1:
             is_admin = True
         else:
