@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lista filmów</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+    }
+    .container {
+        max-width: 800px;
+        margin: 50px auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+        text-align: center;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    .button-container {
+        margin-top: 20px;
+        text-align: center;
+    }
+    .button-container button {
+        padding: 10px 20px;
+        margin: 0 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .button-container button:hover {
+        background-color: #f0f0f0;
+    }
+    .add-movie-form, .update-movie-form {
+        display: none;
+    }
+    .delete-icon {
+        display: none;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body> 
+<div class="container">
+	<h1>Lista filmów</h1> 
+	<table> 
+	<thead> 
+		<tr> 
+		<th>ID</th> 
+		<th>tytul</th> 
+		<th>reżyser</th> 
+		<th>gatunek</th> 
+		<th>język</th> 
+        <th>napisy</th>
+        <th>rok wydania</th>  
+        <th>czas trwania</th> 
+		</tr> 
+	</thead> 
+
+	<tbody> 
+		{% for row in data %} 
+		<tr> 
+		<td>{{ row[0] }}</td> 
+		<td>{{ row[1] }}</td> 
+		<td>{{ row[2] }}</td> 
+		<td>{{ row[3] }}</td>
+		<td>{{ row[4] }}</td>
+		<td>{{ row[5] }}</td>
+		<td>{{ row[6] }}</td>
+		<td>{{ row[7] }}</td> 
+        <td class="delete-icon">
+            <form action="/admin/delete_movie" method="post" class="delete-form" style="display: none;">
+                <input type="hidden" name="id_movie" value="{{ row[0] }}"> 
+                <button type="submit">❌</button>
+            </form>
+        </td>
+        <td class="update-movie-form" style="display: none;">
+            <form action="/admin/update_movie" method="post"> 
+                <input type="hidden" name="id" value="{{ row[0] }}"> 
+                <input type="text" name="tytul" value="{{ row[1] }}"> 
+                <input type="text" name="rezyser" value="{{ row[2] }}"> 
+                <input type="text" name="gatunek" value="{{ row[3] }}"> 
+                <input type="text" name="jezyk" value="{{ row[4] }}"> 
+                <input type="text" name="napisy" value="{{ row[5] }}"> 
+                <input type="text" name="rok" value="{{ row[6] }}"> 
+                <input type="text" name="czas" value="{{ row[7] }}">  
+                <input type="submit" value="Aktualizuj"> 
+            </form> 
+        </td>
+		</tr> 
+		{% endfor %} 
+	</tbody> 
+	</table> 
+    <div class="button-container">
+        <button onclick="goBack()">Powrót</button>
+        <button onclick="toggleForm()">Dodaj film</button>
+        <button onclick="toggleUpdateForms()">Edytuj Film</button>
+        <button onclick="toggleDeleteIcon()">Usuń film</button>
+    </div>
+    <div class="add-movie-form">
+        <h2>Dodaj film</h2> 
+        <form action="/admin/add_movie" method="post"> 
+            <input type="text" name="tytul" placeholder="tytul"> 
+            <input type="text" name="gatunek" placeholder="gatunek"> 
+            <input type="text" name="rezyser" placeholder="rezyser"> 
+            <input type="text" name="jezyk" placeholder="jezyk">
+            <input type="hidden" name="napisy" value=0>
+            <input type="checkbox" name="napisy" id="napisyCheckbox" onclick="toggleNapisy()">
+            <label for="napisyCheckbox">Napisy</label>
+            <input type="text" name="rok" placeholder="rok">
+            <input type="text" name="czas" placeholder="czas">
+            <input type="submit" value="Create"> 
+        </form> 
+    </div>
+</div>
+
+<script>
+    function toggleForm() {
+        var form = document.querySelector('.add-movie-form');
+        form.style.display = (form.style.display === 'none') ? 'block' : 'none';
+    }
+
+    function toggleNapisy() {
+        var napisyInput = document.querySelector('input[name="napisy"]');
+        if (document.getElementById('napisyCheckbox').checked) {
+            napisyInput.value = 1;
+        } else {
+            napisyInput.value = 0;
+        }
+    }
+
+    function toggleDeleteIcon() {
+        var deleteForms = document.querySelectorAll('.delete-form');
+        for (var i = 0; i < deleteForms.length; i++) {
+            deleteForms[i].style.display = 'block';
+        }
+
+        var deleteIcons = document.querySelectorAll('.delete-icon');
+        for (var i = 0; i < deleteIcons.length; i++) {
+            deleteIcons[i].style.display = 'inline-block';
+        }
+    }
+
+    function toggleUpdateForms() {
+        var updateForms = document.querySelectorAll('.update-movie-form');
+        for (var i = 0; i < updateForms.length; i++) {
+            updateForms[i].style.display = 'block';
+        }
+    }
+
+    function goBack() {
+        window.location.href = '/home';  
+    }
+
+    function navigate(route) {
+        window.location.href = route;
+    }
+</script>
+
+</body> 
+</html>

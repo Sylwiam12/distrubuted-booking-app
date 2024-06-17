@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container">
+    <a href="/home" class="btn btn-light" style="position: absolute; top: 20px; left: 20px;">
+        <i class="fas fa-home"></i> Home
+    </a>
+    <h1>Podsumowanie Rezerwacji</h1>
+    <div class="summary-container">
+        <p><strong>Film:</strong> {{ film_name }}</p>
+        <p><strong>Kino:</strong> {{ cinema_name }}</p>
+        <p><strong>Data:</strong> {{ date }}</p>
+        <p><strong>Godzina:</strong> {{ time }}</p>
+        <p><strong>Liczba miejsc:</strong> {{ seat_details|length }}</p>
+        <p><strong>Szczegóły miejsc:</strong></p>
+        <ul>
+            {% for row, seat, ticket in seat_details %}
+            <li>Rząd {{ row }} - Miejsce {{ seat }} - {{ ticket }} ({{ '18 PLN' if ticket == 'ulgowy' else '24 PLN' }})</li>
+            {% endfor %}
+        </ul>
+        <p><strong>Całkowity koszt:</strong> {{ total_cost }} PLN</p>
+        
+        <!-- Button for Proceeding to Payment -->
+        <form action="{{ url_for('payment') }}" method="post" id="payment-form">
+            <input type="hidden" name="id_filmu" value="{{ id_filmu }}">
+            <input type="hidden" name="id_kina" value="{{ id_kina }}">
+            <input type="hidden" name="date" value="{{ date }}">
+            <input type="hidden" name="time" value="{{ time }}">
+            <input type="hidden" name="id_seansu" value="{{ id_seansu }}">
+            {% for row, seat, ticket in seat_details %}
+            <input type="hidden" name="rows[]" value="{{ row }}">
+            <input type="hidden" name="seats[]" value="{{ seat }}">
+            <input type="hidden" name="ticket_types[]" value="{{ ticket }}">
+            {% endfor %}
+            <button type="button" class="btn btn-primary" onclick="confirmReservation()">Zatwierdź i Przejdź do Płatności</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function confirmReservation() {
+        // Change seat colors to red to indicate reservation
+        const reservedSeats = {{ seat_details | tojson }};
+        reservedSeats.forEach(([row, seat, ticket]) => {
+            const seatElement = document.querySelector(`.row[data-row="${row}"] .seat[data-seat="${seat}"]`);
+            if (seatElement) {
+                seatElement.classList.add('reserved');
+            }
+        });
+
+        // Submit the form
+        document.getElementById('payment-form').submit();
+    }
+</script>
+
+<style>
+    .summary-container {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 800px;
+        margin: 20px auto;
+        position: relative;
+    }
+    h1 {
+        text-align: center;
+        color: #333;
+    }
+    .summary-container p {
+        font-size: 16px;
+        color: #333;
+    }
+    .summary-container ul {
+        list-style-type: none;
+        padding: 0;
+    }
+    .summary-container ul li {
+        font-size: 16px;
+        color: #333;
+    }
+</style>
+{% endblock %}
