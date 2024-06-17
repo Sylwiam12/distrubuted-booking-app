@@ -86,13 +86,13 @@
 		<td>{{ row[6] }}</td>
 		<td>{{ row[7] }}</td> 
         <td class="delete-icon">
-            <form action="admin/delete_movie" method="post" class="delete-form" style="display: none;">
+            <form action="/admin/delete_movie" method="post" class="delete-form" style="display: none;">
                 <input type="hidden" name="id_movie" value="{{ row[0] }}"> 
                 <button type="submit">❌</button>
             </form>
         </td>
         <td class="update-movie-form" style="display: none;">
-            <form action="admin/update_movie" method="post"> 
+            <form action="/admin/update_movie" method="post"> 
                 <input type="hidden" name="id" value="{{ row[0] }}"> 
                 <input type="text" name="tytul" value="{{ row[1] }}"> 
                 <input type="text" name="rezyser" value="{{ row[2] }}"> 
