@@ -20,7 +20,6 @@
         </ul>
         <p><strong>Całkowity koszt:</strong> {{ total_cost }} PLN</p>
         
-        <!-- Button for Proceeding to Payment -->
         <form action="{{ url_for('payment') }}" method="post" id="payment-form">
             <input type="hidden" name="id_filmu" value="{{ id_filmu }}">
             <input type="hidden" name="id_kina" value="{{ id_kina }}">
@@ -39,7 +38,6 @@
 
 <script>
     function confirmReservation() {
-        // Change seat colors to red to indicate reservation
         const reservedSeats = {{ seat_details | tojson }};
         reservedSeats.forEach(([row, seat, ticket]) => {
             const seatElement = document.querySelector(`.row[data-row="${row}"] .seat[data-seat="${seat}"]`);
@@ -47,8 +45,6 @@
                 seatElement.classList.add('reserved');
             }
         });
-
-        // Submit the form
         document.getElementById('payment-form').submit();
     }
 </script>

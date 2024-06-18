@@ -351,7 +351,7 @@ def dodaj_seans():
         # Get the movie duration
         cur.execute('SELECT czas_trwania FROM film WHERE id_filmu = %s', (film_id,))
         duration = cur.fetchone()[0]
-        duration_in_minutes = duration  # assuming czas_trwania is in minutes
+        duration_in_minutes = duration  
 
         # Calculate time slots to be used
         start_hour, start_minute = map(int, time.split(':'))
@@ -362,7 +362,6 @@ def dodaj_seans():
             for i in range(0, duration_in_minutes, interval)
         ]
 
-        # Check if all the times are available in the dostepnosc_sali table
         unavailable_times = []
         for check_time in times_to_check:
             cur.execute('SELECT 1 FROM dostepnosc_sali WHERE id_sali = %s AND dzien = %s AND dostepna_godzina = %s FOR UPDATE', 
@@ -374,7 +373,6 @@ def dodaj_seans():
             conn.rollback()
             return render_template('error.html', message=f"Time slots {', '.join(unavailable_times)} are not available for this seans.")
 
-        # Proceed with inserting the seans
         cur.execute('''
             INSERT INTO seans (id_filmu, id_sali, data_seansu, godzina)
             VALUES (%s, %s, %s, %s)
@@ -428,7 +426,7 @@ def delete_seans():
         
         cur.execute('SELECT czas_trwania FROM film WHERE id_filmu = %s', (film_id,))
         duration = cur.fetchone()[0]
-        duration_in_minutes = duration  # assuming czas_trwania is in minutes
+        duration_in_minutes = duration  
 
         start_hour, start_minute = map(int, time.split(':'))
         interval = 15  # minutes

@@ -28,12 +28,10 @@ def user_information():
     
     conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
     cur = conn.cursor(dictionary=True)
-    
-    # Fetch user information
+
     cur.execute('SELECT * FROM uzytkownik WHERE id_uzytkownika = %s', (user_id,))
     user_db = cur.fetchone()
 
-    # Fetch reservations with additional details
     cur.execute('''
         SELECT r.id_rezerwacji, r.ilosc_miejsc, s.id_sali, s.id_filmu, f.tytul AS film_title, s.data_seansu, s.godzina, k.nazwa AS cinema_name, z.rzad, z.numer
         FROM rezerwacja r
@@ -204,7 +202,7 @@ def pick_seat():
     query = """ SELECT id_sali FROM sala WHERE id_kina = %s AND nazwa = %s; """
     cur.execute(query, (id_kina, sala))
     sala_id = cur.fetchone()[0]
-    # Fetch reserved seats
+
     query = """
         SELECT z.rzad, z.numer
         FROM zajete_miejsce z
@@ -216,7 +214,7 @@ def pick_seat():
     rows = cur.fetchall()
     reserved_seats = [(row[0], row[1]) for row in rows]
 
-    # Fetch the number of seats
+
     sala_query = """
         SELECT ilosc_miejsc
         FROM sala 
@@ -226,15 +224,12 @@ def pick_seat():
     ilosc_miejsc = cur.fetchone()[0]
     rows_count = (ilosc_miejsc + 9) // 10
 
-    # Initialize all seats
     all_seats = {row: list(range(1, 11)) for row in range(1, rows_count + 1)}
 
-    # Remove reserved seats
     for rzad, numer in reserved_seats:
         if rzad in all_seats and numer in all_seats[rzad]:
             all_seats[rzad].remove(numer)
         else:
-            # Log the error or handle it appropriately
             print(f"Warning: Seat {numer} in row {rzad} is reserved but not in the expected range.")
 
     cur.close()
@@ -269,14 +264,12 @@ def summary():
         conn = mysql.connector.connect(host=host, database=database, user=user, password=password)
         cur = conn.cursor()
 
-        # Fetch film and cinema names from the database based on their IDs
         cur.execute("SELECT nazwa FROM kino WHERE id_kina = %s", (id_kina,))
         cinema_name = cur.fetchone()[0]
 
         cur.execute("SELECT tytul FROM film WHERE id_filmu = %s", (id_filmu,))
         film_name = cur.fetchone()[0]
 
-        # Fetch the id_seansu
         cur.execute("""
             SELECT id_seansu FROM seans 
             WHERE id_filmu = %s AND data_seansu = %s AND godzina = %s AND id_sali = %s
@@ -358,8 +351,6 @@ def payment():
         
         
     return render_template('payment.html', reservation_id=reservation_id, seat_details=seat_details, total_cost=total_cost)
-
-    # return redirect(url_for('success', reservation_id=reservation_id, total_cost=total_cost))
 
 
 @user_app.route('/user/payment/confirmation', methods=['POST'])
